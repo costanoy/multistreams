@@ -40,6 +40,22 @@ export interface Status {
   checkedAt: string;
 }
 
+/** Uma live qualquer da plataforma, para a lista "tudo ao vivo". */
+export interface BrowseItem {
+  key: string;
+  platform: Platform;
+  channelId: string;
+  login: string;
+  name: string;
+  avatar: string | null;
+  viewers: number;
+  title: string;
+  cat: string;
+  thumb: string | null;
+  lang: string;
+  url: string;
+}
+
 export class HttpError extends Error {
   constructor(public status: number, message: string) {
     super(message);

@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { config } from './config.js';
-import { Channel, HttpError, Live, chunk, getJson, langCode } from './types.js';
+import { BrowseItem, Channel, HttpError, Live, chunk, getJson, langCode } from './types.js';
 
 let token: { value: string; exp: number } | null = null;
 
@@ -88,6 +88,38 @@ export async function lastLiveAt(id: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+const avatars = new Map<string, string>();
+
+/** As 100 lives com mais viewers da Twitch em uma língua. */
+export async function topLive(lang: string): Promise<BrowseItem[]> {
+  const r = await helix('streams', [['first', '100'], ['language', lang]]);
+  const live = r.data.filter((s: any) => s.type === 'live');
+  const need = live.map((s: any) => s.user_id as string).filter((id: string) => !avatars.has(id));
+  if (need.length) {
+    if (avatars.size > 5000) avatars.clear();
+    try {
+      const u = await helix('users', need.map((id: string): [string, string] => ['id', id]));
+      for (const x of u.data) avatars.set(x.id, x.profile_image_url);
+    } catch {
+      // avatar é opcional
+    }
+  }
+  return live.map((s: any): BrowseItem => ({
+    key: `twitch:${s.user_id}`,
+    platform: 'twitch',
+    channelId: s.user_id,
+    login: s.user_login,
+    name: s.user_name,
+    avatar: avatars.get(s.user_id) ?? null,
+    viewers: s.viewer_count,
+    title: s.title,
+    cat: s.game_name || '',
+    thumb: s.thumbnail_url ? s.thumbnail_url.replace('{width}', '640').replace('{height}', '360') : null,
+    lang,
+    url: `https://www.twitch.tv/${s.user_login}`,
+  }));
 }
 
 // ---- EventSub (opcional) ----

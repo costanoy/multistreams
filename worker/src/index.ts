@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { browse } from './browse.js';
 import { config, enabled } from './config.js';
 import * as kick from './kick.js';
 import * as registry from './registry.js';
@@ -32,6 +33,14 @@ app.get('/search', async c => {
   if (!p || q.length < 2) return c.json({ error: 'bad_request' }, 400);
   if (!enabled[p]) return c.json({ error: 'platform_not_configured' }, 503);
   return c.json(await api[p].search(q));
+});
+
+/** Tudo que está ao vivo nas plataformas e línguas pedidas, por viewers. */
+app.get('/browse', async c => {
+  const platforms = (c.req.query('platforms') ?? '').split(',').map(platformOf).filter((p): p is Platform => !!p);
+  const langs = [...new Set((c.req.query('langs') ?? '').split(','))].filter(l => /^[a-z]{2}$/.test(l)).slice(0, 8);
+  if (!platforms.length || !langs.length) return c.json({ error: 'bad_request' }, 400);
+  return c.json({ at: new Date().toISOString(), items: await browse([...new Set(platforms)], langs) });
 });
 
 app.post('/status', async c => {

@@ -15,6 +15,8 @@ export const config = {
   supabase: { url: env('SUPABASE_URL'), key: env('SUPABASE_SERVICE_ROLE_KEY') },
   publicUrl: env('PUBLIC_URL').replace(/\/$/, ''),
   eventsubSecret: env('TWITCH_EVENTSUB_SECRET'),
+  /** de quanto em quanto tempo redescobrir quem está ao vivo no YouTube (caro em cota) */
+  browseYoutube: (Number(env('BROWSE_YOUTUBE_MINUTES')) || 60) * 60000,
   poll: { twitch: secs('POLL_TWITCH', 60), kick: secs('POLL_KICK', 60), youtube: secs('POLL_YOUTUBE', 180) },
 };
 

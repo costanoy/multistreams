@@ -4,7 +4,7 @@ import { ReactNode, useEffect } from 'react';
 import { BackHandler, Image, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { go } from './open';
-import { useLists, useStore } from './store';
+import { useLiveCards, useStore } from './store';
 import { FONT, SH, grad } from './theme';
 import { Btn, Eq, Lcd, LcdText, Rise, T, useSkin } from './ui';
 
@@ -13,7 +13,7 @@ const logo = require('../assets/images/logo-round.png');
 type Key = 'radar' | 'add' | 'import' | 'settings' | 'languages' | 'notifications' | 'skins' | 'streamer';
 const PATH: Record<Key, string> = { radar: '/', add: '/add', import: '/import', settings: '/settings', languages: '/languages', notifications: '/notifications', skins: '/skins', streamer: '/streamer' };
 const TITLES: Record<Key, string> = { streamer: 'Streamer', radar: 'Ao vivo', add: 'Adicionar', import: 'Importar seguidos', settings: 'Ajustes', languages: 'Idiomas', notifications: 'Notificações', skins: 'Skin' };
-const WEB_SUB: Partial<Record<Key, string>> = { radar: 'Quem dos seus streamers está no ar agora.', add: 'Cole o link do canal ou busque pelo nome.', import: 'Traga quem você já segue.', settings: 'Conta e preferências.', languages: 'Quais línguas aparecem em Ao vivo.', notifications: 'Escolha de quem receber aviso.', skins: 'A carcaça do seu radar.' };
+const WEB_SUB: Partial<Record<Key, string>> = { radar: 'Quem está no ar agora, do mais assistido para o menos.', add: 'Cole o link do canal ou busque pelo nome.', import: 'Traga quem você já segue.', settings: 'Conta e preferências.', languages: 'Quais línguas aparecem em Ao vivo.', notifications: 'Escolha de quem receber aviso.', skins: 'A carcaça do seu radar.' };
 
 export const useWide = () => {
   const { width } = useWindowDimensions();
@@ -41,7 +41,7 @@ function useNav() {
 
 function LiveCounter({ big }: { big?: boolean }) {
   const s = useSkin();
-  const n = String(useLists().live.length).padStart(2, '0');
+  const n = String(useLiveCards().length).padStart(2, '0');
   if (big) {
     return (
       <Lcd r={10} style={{ padding: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>

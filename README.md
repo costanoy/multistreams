@@ -57,6 +57,15 @@ Sem Supabase o app já funciona no modo "sem conta": a lista fica salva no apare
 - **Web:** `cd client && npx expo export --platform web` gera `dist/` (SPA estática).
 - **Lojas:** `eas build` + `eas submit`. Troque `com.multistreams.app` em `client/app.json` pelo identificador definitivo.
 
+## Aba Ao vivo
+
+Tem dois modos, os dois ordenados por viewers e filtrados pelas línguas e plataformas marcadas (mínimo de uma de cada):
+
+- **Tudo ao vivo** (padrão): as lives com mais viewers de cada plataforma (`GET /browse` no worker, até 200 no total).
+- **Só quem eu sigo**: a lista do usuário, com a seção Offline. A lista vem da importação (login com Twitch e Google) e dos canais adicionados por link. A Kick não tem API de seguidos, então os canais dela entram só pelo link.
+
+No YouTube, descobrir quem está ao vivo é caro em cota e depende de uma busca por palavra ("ao vivo", "live"...), então a lista de lá é aproximada e é redescoberta a cada `BROWSE_YOUTUBE_MINUTES` (padrão 60); os viewers são atualizados a cada 3 minutos.
+
 ## Notas de API
 
 - **Twitch:** Helix `Get Streams` (100 canais por chamada, a cada 60s) + EventSub opcional.

@@ -1,5 +1,5 @@
 import { config } from './config.js';
-import { Channel, Live, chunk, getJson, langCode } from './types.js';
+import { BrowseItem, Channel, Live, chunk, getJson, langCode } from './types.js';
 
 const API = 'https://www.googleapis.com/youtube/v3';
 
@@ -47,19 +47,70 @@ export async function search(q: string): Promise<Channel[]> {
   return res;
 }
 
-let categories: Map<string, string> | null = null;
+let categories: Promise<Map<string, string>> | null = null;
 async function categoryName(id: string): Promise<string> {
-  if (!categories) {
-    categories = new Map();
-    try {
-      const r = await yt('videoCategories', { part: 'snippet', regionCode: 'BR', hl: 'pt_BR' });
-      for (const c of r.items ?? []) categories.set(c.id, c.snippet.title);
-    } catch {
+  // guarda a promessa, não o mapa: chamadas simultâneas esperam a mesma consulta
+  categories ??= yt('videoCategories', { part: 'snippet', regionCode: 'BR', hl: 'pt_BR' })
+    .then(r => new Map<string, string>((r.items ?? []).map((c: any) => [c.id, c.snippet.title])))
+    .catch(() => {
       categories = null;
-      return '';
+      return new Map<string, string>();
+    });
+  return (await categories).get(id) ?? '';
+}
+
+const LIVE_WORD: Record<string, string> = { pt: 'ao vivo', en: 'live', es: 'en vivo', fr: 'en direct', de: 'live', it: 'in diretta', ja: 'ライブ', ko: '라이브' };
+const found = new Map<string, { at: number; ids: string[] }>();
+const avatars = new Map<string, string>();
+
+/**
+ * Lives do YouTube com mais viewers em uma língua. Descobrir quem está ao vivo custa caro
+ * (search.list = 100 unidades), então a descoberta é refeita só a cada `browseYoutube` ms;
+ * os viewers desses vídeos são atualizados a cada chamada (videos.list = 1 unidade).
+ */
+export async function topLive(lang: string): Promise<BrowseItem[]> {
+  let d = found.get(lang);
+  if (!d || Date.now() - d.at > config.browseYoutube) {
+    try {
+      // sem um termo de busca a API devolve uma lista vazia; "ao vivo" na língua pedida é o mais neutro
+      const s = await yt('search', { part: 'id', type: 'video', eventType: 'live', order: 'viewCount', q: LIVE_WORD[lang] ?? 'live', relevanceLanguage: lang, maxResults: '50' });
+      d = { at: Date.now(), ids: (s.items ?? []).map((i: any) => i.id.videoId).filter(Boolean) };
+      found.set(lang, d);
+    } catch (e) {
+      if (!d) throw e; // sem cota: segue com a última descoberta
     }
   }
-  return categories.get(id) ?? '';
+  if (!d!.ids.length) return [];
+  const r = await yt('videos', { part: 'snippet,liveStreamingDetails', id: d!.ids.join(',') });
+  const live = (r.items ?? []).filter((v: any) => {
+    const vl = langCode(v.snippet.defaultAudioLanguage ?? v.snippet.defaultLanguage);
+    // relevanceLanguage é só uma dica: descarta o que declara outra língua
+    return v.snippet.liveBroadcastContent === 'live' && (!vl || vl === lang);
+  });
+  const need = [...new Set(live.map((v: any) => v.snippet.channelId as string))].filter(id => !avatars.has(id as string));
+  if (need.length) {
+    if (avatars.size > 5000) avatars.clear();
+    try {
+      const c = await yt('channels', { part: 'snippet', id: need.join(','), maxResults: '50' });
+      for (const x of c.items ?? []) avatars.set(x.id, x.snippet.thumbnails?.default?.url ?? '');
+    } catch {
+      // avatar é opcional
+    }
+  }
+  return Promise.all(live.map(async (v: any): Promise<BrowseItem> => ({
+    key: `youtube:${v.snippet.channelId}`,
+    platform: 'youtube',
+    channelId: v.snippet.channelId,
+    login: '',
+    name: v.snippet.channelTitle,
+    avatar: avatars.get(v.snippet.channelId) || null,
+    viewers: Number(v.liveStreamingDetails?.concurrentViewers) || 0,
+    title: v.snippet.title,
+    cat: await categoryName(v.snippet.categoryId),
+    thumb: v.snippet.thumbnails?.maxres?.url ?? v.snippet.thumbnails?.high?.url ?? v.snippet.thumbnails?.medium?.url ?? null,
+    lang,
+    url: `https://www.youtube.com/watch?v=${v.id}`,
+  })));
 }
 
 /** Vídeos recentes pelo feed RSS do canal (não gasta cota). null = feed indisponível. */

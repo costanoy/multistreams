@@ -8,7 +8,9 @@ export function LangList({ compact, cols }: { compact?: boolean; cols: number })
   const s = useSkin();
   const langs = useStore(st => st.langs);
   const toggle = useStore(st => st.toggleLang);
-  const { allLive } = useLists();
+  // a contagem por língua só faz sentido para a lista do usuário, que é conhecida inteira
+  const onlyFollowed = useStore(st => st.onlyFollowed);
+  const allLive = useLists().allLive.filter(() => onlyFollowed);
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
       {LANG_ORDER.map(k => {

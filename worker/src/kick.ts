@@ -1,5 +1,5 @@
 import { config } from './config.js';
-import { Channel, HttpError, Live, chunk, getJson, langCode } from './types.js';
+import { BrowseItem, Channel, HttpError, Live, chunk, getJson, langCode } from './types.js';
 
 const API = 'https://api.kick.com/public/v1';
 let token: { value: string; exp: number } | null = null;
@@ -57,6 +57,25 @@ export async function resolve(slug: string): Promise<Channel | null> {
 export async function search(q: string): Promise<Channel[]> {
   const c = await resolve(q.replace(/\s+/g, ''));
   return c ? [c] : [];
+}
+
+/** As 100 lives com mais viewers da Kick em uma língua. */
+export async function topLive(lang: string): Promise<BrowseItem[]> {
+  const r = await kick('livestreams', [['limit', '100'], ['sort', 'viewer_count'], ['language', lang]]);
+  return (r.data ?? []).filter((s: any) => s.slug).map((s: any): BrowseItem => ({
+    key: `kick:${s.slug}`,
+    platform: 'kick',
+    channelId: s.slug,
+    login: s.slug,
+    name: s.slug,
+    avatar: s.profile_picture || null,
+    viewers: s.viewer_count ?? 0,
+    title: s.stream_title ?? '',
+    cat: s.category?.name ?? '',
+    thumb: s.thumbnail || null,
+    lang,
+    url: `https://kick.com/${s.slug}`,
+  }));
 }
 
 export async function fetchLive(slugs: string[]): Promise<Map<string, Live>> {

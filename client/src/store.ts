@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { Status, fetchStatus } from './api';
-import { DEFAULT_LANGS, LANGS, LANG_ORDER, PLAT, Plat, SkinKey, ago } from './theme';
+import { BrowseItem, Status, fetchBrowse, fetchStatus } from './api';
+import { DEFAULT_LANGS, LANGS, LANG_ORDER, PLAT, PLATS, Plat, SkinKey, ago } from './theme';
 
 export interface Streamer {
   /** `${plat}:${channelId}` */
@@ -27,6 +27,13 @@ interface State {
   statusAt: number | null;
   netDown: boolean;
   langs: string[];
+  /** plataformas que aparecem em Ao vivo (mínimo 1) */
+  platforms: Plat[];
+  /** Ao vivo mostra só a lista do usuário, em vez de tudo que está no ar */
+  onlyFollowed: boolean;
+  /** tudo que está ao vivo nas plataformas e línguas marcadas, por viewers */
+  browse: BrowseItem[];
+  browseAt: number | null;
   skin: SkinKey;
   notifyAll: boolean;
   account: { provider: Provider; userId: string } | null;
@@ -40,8 +47,12 @@ interface State {
   toggleNotify: (id: string) => void;
   setStreamerLang: (id: string, lang: string) => void;
   toggleLang: (k: string) => void;
+  togglePlatform: (p: Plat) => void;
   refresh: () => Promise<boolean>;
+  refreshBrowse: () => Promise<boolean>;
 }
+
+let browseSeq = 0;
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -55,6 +66,10 @@ export const useStore = create<State>()(
       statusAt: null,
       netDown: false,
       langs: DEFAULT_LANGS,
+      platforms: PLATS,
+      onlyFollowed: false,
+      browse: [],
+      browseAt: null,
       skin: 'prata',
       notifyAll: true,
       account: null,
@@ -88,6 +103,25 @@ export const useStore = create<State>()(
         if (langs.length === 1) return showToast('Mantenha pelo menos uma língua marcada');
         set({ langs: langs.filter(x => x !== k) });
       },
+      togglePlatform: p => {
+        const { platforms, showToast } = get();
+        if (!platforms.includes(p)) return set({ platforms: PLATS.filter(x => x === p || platforms.includes(x)) });
+        if (platforms.length === 1) return showToast('Mantenha pelo menos uma plataforma marcada');
+        set({ platforms: platforms.filter(x => x !== p) });
+      },
+      refreshBrowse: async () => {
+        const seq = ++browseSeq;
+        const { platforms, langs } = get();
+        try {
+          const r = await fetchBrowse(platforms, langs);
+          // só vale a resposta do pedido mais recente (os filtros podem ter mudado no caminho)
+          if (seq === browseSeq) set({ browse: r.items, browseAt: Date.now(), netDown: false });
+          return true;
+        } catch {
+          if (seq === browseSeq) set({ netDown: true });
+          return false;
+        }
+      },
       refresh: async () => {
         const keys = get().streams.map(s => s.id);
         if (!keys.length) {
@@ -107,7 +141,7 @@ export const useStore = create<State>()(
     {
       name: 'multistreams',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: s => ({ onboarded: s.onboarded, streams: s.streams, statuses: s.statuses, statusAt: s.statusAt, langs: s.langs, skin: s.skin, notifyAll: s.notifyAll }),
+      partialize: s => ({ onboarded: s.onboarded, streams: s.streams, statuses: s.statuses, statusAt: s.statusAt, langs: s.langs, platforms: s.platforms, onlyFollowed: s.onlyFollowed, skin: s.skin, notifyAll: s.notifyAll }),
       onRehydrateStorage: () => () => useStore.setState({ hydrated: true }),
     },
   ),
@@ -153,7 +187,43 @@ export function useLists() {
   };
 }
 
-export const langSummary = (langs: string[]) => {
+/** Uma linha da aba Ao vivo, venha ela da lista do usuário ou de "tudo ao vivo". */
+export interface LiveCard {
+  id: string;
+  plat: Plat;
+  name: string;
+  title: string;
+  cat: string;
+  thumb: string | null;
+  viewers: number;
+  lang: string;
+  /** só existe quando o canal está na lista do usuário */
+  followed?: Item;
+  url: string | null;
+}
+
+/** O que a aba Ao vivo mostra agora, já filtrado por língua e plataforma e ordenado por viewers. */
+export function useLiveCards(): LiveCard[] {
+  const { live } = useLists();
+  const browse = useStore(s => s.browse);
+  const langs = useStore(s => s.langs);
+  const platforms = useStore(s => s.platforms);
+  const onlyFollowed = useStore(s => s.onlyFollowed);
+  if (onlyFollowed) {
+    return live
+      .filter(x => platforms.includes(x.plat))
+      .map(x => ({ id: x.id, plat: x.plat, name: x.name, title: x.status!.title, cat: x.status!.cat, thumb: x.status!.thumb, viewers: x.viewers, lang: x.effLang, followed: x, url: x.status!.url }));
+  }
+  const mine = new Map(live.map(x => [x.id, x]));
+  return browse
+    .filter(b => platforms.includes(b.platform) && langs.includes(b.lang))
+    .map(b => ({ id: b.key, plat: b.platform, name: b.name, title: b.title, cat: b.cat, thumb: b.thumb, viewers: b.viewers, lang: b.lang, followed: mine.get(b.key), url: b.url }));
+}
+
+export const platSummary = (platforms: Plat[]) =>
+  platforms.length === PLATS.length ? 'Todas' : PLATS.filter(p => platforms.includes(p)).map(p => PLAT[p].label).join(', ');
+
+export const langSummary =(langs: string[]) => {
   const codes = LANG_ORDER.filter(k => langs.includes(k)).map(x => x.toUpperCase());
   return codes.length === LANG_ORDER.length ? 'Todas' : codes.length > 3 ? codes.slice(0, 2).join(', ') + ' +' + (codes.length - 2) : codes.join(', ');
 };

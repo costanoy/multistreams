@@ -56,7 +56,26 @@ export const fetchStatus = (keys: string[]) =>
     body: JSON.stringify({ keys }),
   });
 
-export const errorText = (e: unknown, plat?: Plat) => {
+/** Uma live qualquer da plataforma, para a lista "tudo ao vivo". */
+export interface BrowseItem {
+  key: string;
+  platform: Plat;
+  channelId: string;
+  login: string;
+  name: string;
+  avatar: string | null;
+  viewers: number;
+  title: string;
+  cat: string;
+  thumb: string | null;
+  lang: string;
+  url: string;
+}
+
+export const fetchBrowse = (platforms: Plat[], langs: string[]) =>
+  call<{ at: string; items: BrowseItem[] }>(`/browse?${qs({ platforms: platforms.join(','), langs: langs.join(',') })}`);
+
+export const errorText =(e: unknown, plat?: Plat) => {
   const code = e instanceof ApiError ? e.code : '';
   if (code === 'platform_not_configured' && plat) return `${PLAT[plat].label} ainda não está configurada no servidor.`;
   if (code === 'no_api') return 'Servidor não configurado (EXPO_PUBLIC_API_URL).';
