@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Michroma&family=VT323&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'DSEG14';src:url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG14-Classic/DSEG14Classic-Bold.woff2') format('woff2');font-display:swap}
+@keyframes msEq{0%{transform:scaleY(.2)}100%{transform:scaleY(1)}}
+@keyframes msDrop{0%{transform:translateY(-120%);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes msRise{0%{transform:translateY(30px);opacity:0}100%{transform:translateY(0);opacity:1}}
+html,body{margin:0;padding:0}
+a{color:#2f6fe0}a:hover{color:#1d4fb0}
+</style>
+</helmet>
+<div style="width:100%;height:100%;position:relative;overflow:hidden;display:flex;flex-direction:column;background:{{ s.panel }};color:{{ s.ink }};font-family:'Chakra Petch',system-ui,sans-serif;box-sizing:border-box">
+
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ true }}">
+    <div style="height:{{ statusH }};background:{{ s.frameTop }};display:flex;align-items:center;justify-content:space-between;padding:{{ statusPad }};box-sizing:border-box;color:{{ s.frameInk }};font-weight:600;font-size:{{ statusFont }};flex-shrink:0;position:relative;z-index:3">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div>9:41</div>
+        <sc-if value="{{ showStatusIcon }}" hint-placeholder-val="{{ false }}"><div style="width:14px;height:14px;flex-shrink:0;background:{{ s.frameInk }};-webkit-mask:url(assets/icon-mono-white.png) center/contain no-repeat;mask:url(assets/icon-mono-white.png) center/contain no-repeat"></div></sc-if>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:11px">
+          <div style="width:3px;height:4px;background:{{ s.frameInk }};border-radius:1px"></div>
+          <div style="width:3px;height:6px;background:{{ s.frameInk }};border-radius:1px"></div>
+          <div style="width:3px;height:8px;background:{{ s.frameInk }};border-radius:1px"></div>
+          <div style="width:3px;height:11px;background:{{ s.frameInk }};border-radius:1px"></div>
+        </div>
+        <div style="width:24px;height:12px;border:1.5px solid {{ s.frameInk }};border-radius:4px;padding:1.5px;box-sizing:border-box"><div style="width:72%;height:100%;background:{{ s.frameInk }};border-radius:1px"></div></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;min-height:0;overflow:auto;background:{{ s.frame }};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px 36px;box-sizing:border-box">
+      <div style="width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center">
+        <div style="width:128px;height:128px;border-radius:50%;background-image:url(assets/logo-round.png);background-size:100%;background-position:center;flex-shrink:0;filter:drop-shadow(0 8px 16px rgba(0,0,0,.3))"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <div style="font-family:Michroma,sans-serif;font-size:22px;letter-spacing:.08em;color:{{ s.frameInk }}">MULTISTREAMS</div>
+          <div style="background:{{ s.lcdBg }};border-radius:6px;padding:6px 12px;box-shadow:inset 0 1px 4px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.5);font-family:DSEG14,VT323,monospace;font-size:11px;letter-spacing:.06em;color:{{ s.lcdFg }};text-shadow:{{ s.lcdGlow }}">TWITCH YOUTUBE KICK</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:28px;line-height:1.1;font-weight:700;color:{{ s.frameInk }};text-wrap:balance">Quem está ao vivo agora, numa lista só.</div>
+          <div style="font-size:15px;line-height:1.4;color:{{ s.frameMuted }};text-wrap:pretty">Seus streamers da Twitch, do YouTube e da Kick em uma lista, do mais assistido para o menos, nas línguas que você escolher.</div>
+        </div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+          <button onClick="{{ loginTwitch }}" style="height:50px;border:none;border-radius:999px;background:#7c3aed;color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.35),inset 0 -3px 6px rgba(0,0,0,.25),0 3px 8px rgba(0,0,0,.25)">Entrar com Twitch</button>
+          <button onClick="{{ loginGoogle }}" style="height:50px;border:none;border-radius:999px;background:#ffffff;color:#1a1c21;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:inset 0 -3px 6px rgba(0,0,0,.12),0 3px 8px rgba(0,0,0,.2)">Entrar com Google</button>
+          <button onClick="{{ loginGuest }}" style="height:50px;border:none;border-radius:999px;background:{{ s.btn }};color:{{ s.btnInk }};font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.7),inset 0 -3px 6px rgba(0,0,0,.25),0 3px 8px rgba(0,0,0,.22)">Continuar sem conta</button>
+        </div>
+        <div style="font-size:12.5px;line-height:1.45;color:{{ s.frameMuted }};text-wrap:pretty">Sem conta, a lista fica salva neste aparelho. Com conta: sincronização, push e importação de quem você já segue.</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;min-height:0;display:flex;flex-direction:{{ shellDir }}">
+
+      <sc-if value="{{ isWeb }}" hint-placeholder-val="{{ false }}">
+        <div style="width:256px;flex-shrink:0;background:{{ s.frame }};display:flex;flex-direction:column;gap:22px;padding:24px 16px;box-sizing:border-box;box-shadow:inset -1px 0 0 rgba(0,0,0,.25),4px 0 14px rgba(0,0,0,.12);position:relative;z-index:2">
+          <div style="display:flex;align-items:center;gap:10px;padding:0 6px">
+            <div style="width:34px;height:34px;border-radius:50%;background-image:url(assets/logo-round.png);background-size:100%;background-position:center;flex-shrink:0;box-shadow:0 2px 5px rgba(0,0,0,.25)"></div>
+            <div style="font-family:Michroma,sans-serif;font-size:13px;letter-spacing:.08em;color:{{ s.frameInk }}">MULTISTREAMS</div>
+          </div>
+          <div style="background:{{ s.lcdBg }};border-radius:10px;padding:12px 14px;box-shadow:inset 0 2px 6px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.5);display:flex;align-items:flex-end;justify-content:space-between">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="font-size:10px;letter-spacing:.16em;font-weight:600;color:{{ s.lcdFg }}">AO VIVO AGORA</div>
+              <div style="font-family:DSEG14,VT323,monospace;font-size:30px;color:{{ s.lcdFg }};text-shadow:{{ s.lcdGlow }}">{{ liveCountTxt }}</div>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:3px;height:30px">
+              <div style="width:5px;height:100%;background:{{ s.lcdFg }};box-shadow:{{ s.lcdGlow }};transform-origin:bottom;animation:msEq .7s ease-in-out infinite alternate"></div>
+              <div style="width:5px;height:100%;background:{{ s.lcdFg }};box-shadow:{{ s.lcdGlow }};transform-origin:bottom;animation:msEq .9s ease-in-out -.3s infinite alternate"></div>
+              <div style="width:5px;height:100%;background:{{ s.lcdFg }};box-shadow:{{ s.lcdGlow }};transform-origin:bottom;animation:msEq .6s ease-in-out -.5s infinite alternate"></div>
+              <div style="width:5px;height:100%;background:{{ s.lcdFg }};box-shadow:{{ s.lcdGlow }};transform-origin:bottom;animation:msEq .8s ease-in-out -.15s infinite alternate"></div>
+              <div style="width:5px;height:100%;background:{{ s.lcdFg }};box-shadow:{{ s.lcdGlow }};transform-origin:bottom;animation:msEq .75s ease-in-out -.4s infinite alternate"></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <sc-for list="{{ webNav }}" as="n" hint-placeholder-count="6">
+              <button onClick="{{ n.go }}" style="display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border:none;border-radius:12px;background:{{ n.bg }};box-shadow:{{ n.shadow }};color:{{ s.frameInk }};font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;text-align:left">
+                <div style="width:14px;height:14px;border-radius:50%;background:{{ n.dot }};box-shadow:inset 0 1px 1px rgba(255,255,255,.8),inset 0 -2px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.3);flex-shrink:0"></div>
+                <div>{{ n.label }}</div>
+              </button>
+            </sc-for>
+          </div>
+          <div style="flex:1"></div>
+          <button onClick="{{ goSettings }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:none;border-radius:14px;background:{{ s.btn }};box-shadow:inset 0 2px 1px rgba(255,255,255,.6),inset 0 -3px 6px rgba(0,0,0,.2),0 2px 5px rgba(0,0,0,.2);color:{{ s.btnInk }};font-family:inherit;cursor:pointer;text-align:left">
+            <div style="width:30px;height:30px;border-radius:50%;background:{{ accountAvatar }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">{{ accountInitial }}</div>
+            <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <div style="font-size:13px;font-weight:700">{{ accountTitle }}</div>
+              <div style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ accountSub }}</div>
+            </div>
+          </button>
+        </div>
+      </sc-if>
+
+      <div style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column">
+
+        <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ true }}">
+          <div style="background:{{ s.frame }};box-shadow:inset 0 -1px 0 rgba(0,0,0,.28),0 3px 10px rgba(0,0,0,.16);position:relative;z-index:2;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:6px 16px 12px">
+            <sc-if value="{{ showBack }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ back }}" style="width:36px;height:36px;border-radius:50%;border:none;background:{{ s.btn }};color:{{ s.btnInk }};font-size:22px;line-height:1;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 2px 3px 0;box-shadow:inset 0 2px 1px rgba(255,255,255,.85),inset 0 -3px 5px rgba(0,0,0,.28),0 2px 4px rgba(0,0,0,.25);flex-shrink:0">‹</button>
+            </sc-if>
+            <div style="flex:1;min-width:0;font-family:Michroma,sans-serif;font-size:{{ titleSize }};letter-spacing:.04em;color:{{ s.frameInk }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ titleUpper }}</div>
+            <div style="background:{{ s.lcdBg }};border-radius:8px;padding:6px 9px;box-shadow:inset 0 1px 4px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.55);display:flex;align-items:center;gap:7px;flex-shrink:0">
+              <div style="display:flex;align-items:flex-end;gap:2px;height:14px">
+                <div style="width:3px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .7s ease-in-out infinite alternate"></div>
+                <div style="width:3px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .9s ease-in-out -.3s infinite alternate"></div>
+                <div style="width:3px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .6s ease-in-out -.5s infinite alternate"></div>
+              </div>
+              <div style="font-family:DSEG14,VT323,monospace;font-size:15px;color:{{ s.lcdFg }};text-shadow:{{ s.lcdGlow }}">{{ liveCountTxt }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="flex:1;min-height:0;overflow:auto;position:relative">
+          <div style="padding:{{ contentPad }};max-width:{{ contentMax }};margin:0 auto;display:flex;flex-direction:column;gap:16px;box-sizing:border-box">
+
+            <sc-if value="{{ isWeb }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:4px">
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <div style="font-family:Michroma,sans-serif;font-size:24px;letter-spacing:.04em">{{ titleUpper }}</div>
+                  <div style="font-size:14px;color:{{ s.muted }}">{{ webSub }}</div>
+                </div>
+                <sc-if value="{{ isRadar }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ goAdd }}" style="height:42px;padding:0 20px;border:none;border-radius:999px;background:{{ s.accent }};color:{{ s.accentInk }};font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.35),inset 0 -3px 6px rgba(0,0,0,.25),0 3px 8px rgba(0,0,0,.2)">+ Adicionar streamer</button>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ radarEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:36px 12px 12px;text-align:center">
+                <div style="background:{{ s.frame }};border-radius:22px;padding:10px;box-shadow:inset 0 2px 1px rgba(255,255,255,.8),inset 0 -3px 6px rgba(0,0,0,.25),0 8px 20px rgba(0,0,0,.18)">
+                  <div style="width:180px;background:{{ s.lcdBg }};border-radius:12px;padding:16px 18px;box-shadow:inset 0 2px 6px rgba(0,0,0,.9);display:flex;align-items:flex-end;justify-content:space-between">
+                    <div style="font-family:DSEG14,VT323,monospace;font-size:34px;color:{{ s.lcdFg }};text-shadow:{{ s.lcdGlow }}">00</div>
+                    <div style="display:flex;align-items:flex-end;gap:3px;height:30px"><div style="width:5px;height:4px;background:{{ s.lcdFg }};opacity:.5"></div><div style="width:5px;height:4px;background:{{ s.lcdFg }};opacity:.5"></div><div style="width:5px;height:4px;background:{{ s.lcdFg }};opacity:.5"></div><div style="width:5px;height:4px;background:{{ s.lcdFg }};opacity:.5"></div><div style="width:5px;height:4px;background:{{ s.lcdFg }};opacity:.5"></div></div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;max-width:320px">
+                  <div style="font-size:22px;font-weight:700;line-height:1.15;text-wrap:balance">Nenhum streamer ainda</div>
+                  <div style="font-size:14px;line-height:1.45;color:{{ s.muted }};text-wrap:pretty">Adicione quem você acompanha e a gente avisa quem está no ar, em qualquer plataforma.</div>
+                </div>
+                <div style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px">
+                  <button onClick="{{ goAdd }}" style="height:48px;border:none;border-radius:999px;background:{{ s.accent }};color:{{ s.accentInk }};font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.35),inset 0 -3px 6px rgba(0,0,0,.25),0 3px 8px rgba(0,0,0,.2)">Colar link de um canal</button>
+                  <button onClick="{{ goImport }}" style="height:48px;border:none;border-radius:999px;background:{{ s.btn }};color:{{ s.btnInk }};font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.7),inset 0 -3px 6px rgba(0,0,0,.25),0 3px 8px rgba(0,0,0,.18)">Importar da Twitch ou YouTube</button>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ radarFull }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <sc-if value="{{ netDown }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border-radius:14px;background:{{ s.lcdBg }};box-shadow:inset 0 1px 4px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.4)">
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                      <div style="font-family:DSEG14,VT323,monospace;font-size:13px;letter-spacing:.04em;color:#ffb347;text-shadow:0 0 6px rgba(255,179,71,.7)">SEM CONEXAO</div>
+                      <div style="font-size:12.5px;line-height:1.35;color:#e9ecef">Mostrando o status das 9:38. Pode ter mudado.</div>
+                    </div>
+                    <button onClick="{{ retryNet }}" style="height:34px;padding:0 14px;border:none;border-radius:999px;background:{{ s.btn }};color:{{ s.btnInk }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0;box-shadow:inset 0 2px 1px rgba(255,255,255,.7),inset 0 -2px 4px rgba(0,0,0,.25)">Tentar agora</button>
+                  </div>
+                </sc-if>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:.14em;color:{{ s.muted }}">{{ liveCount }} CANAIS NO AR</div>
+                  <button onClick="{{ toggleLangPanel }}" style="display:flex;align-items:center;gap:6px;border:1px solid {{ s.line }};background:{{ langBtnBg }};color:{{ s.ink }};font-family:inherit;font-size:12px;font-weight:600;border-radius:999px;padding:5px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0"><div>{{ sortHint }}</div><div style="font-size:10px">{{ langArrow }}</div></button>
+                </div>
+                <sc-if value="{{ langOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:{{ s.card }};border-radius:14px;box-shadow:0 0 0 1px {{ s.line }},0 6px 14px rgba(0,0,0,.1);padding:8px;display:flex;flex-direction:column;gap:6px;animation:msRise .2s ease-out">
+                    <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:{{ s.muted }};padding:2px 4px 0">MOSTRAR LIVES EM</div>
+                    <div style="display:grid;grid-template-columns:{{ panelCols }};gap:2px">
+                      <sc-for list="{{ langItems }}" as="l" hint-placeholder-count="6">
+                        <button onClick="{{ l.toggle }}" style="display:flex;align-items:center;gap:7px;min-height:32px;padding:0 7px;border:none;border-radius:10px;background:{{ l.rowBg }};color:{{ s.ink }};font-family:inherit;cursor:pointer;text-align:left">
+                          <div style="width:16px;height:16px;border-radius:5px;background:{{ l.boxBg }};color:{{ s.accentInk }};box-shadow:inset 0 0 0 1.5px {{ l.boxRing }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">{{ l.mark }}</div>
+                          <div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px">
+                            <div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.name }}</div>
+                            <sc-if value="{{ l.hasTag }}" hint-placeholder-val="{{ false }}"><div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;padding:2px 5px;border-radius:4px;background:{{ s.lcdBg }};color:{{ s.lcdFg }};white-space:nowrap">{{ l.tag }}</div></sc-if>
+                          </div>
+                          <div style="font-size:10.5px;font-weight:700;color:{{ s.muted }};white-space:nowrap">{{ l.short }}</div>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ noLive }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:22px 16px;border-radius:14px;background:{{ s.card }};box-shadow:0 0 0 1px {{ s.line }};font-size:13.5px;line-height:1.45;color:{{ s.muted }};text-align:center;text-wrap:pretty">Ninguém ao vivo nas línguas marcadas. Marque mais línguas para ver outras lives.</div>
+                </sc-if>
+
+                <sc-if value="{{ showHero }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ hero.open }}" style="background:{{ s.frame }};border-radius:22px;padding:10px 10px 14px;box-shadow:inset 0 2px 1px rgba(255,255,255,.8),inset 0 -3px 6px rgba(0,0,0,.25),0 8px 20px rgba(0,0,0,.18);cursor:pointer;display:flex;flex-direction:column;gap:12px">
+                    <div style="aspect-ratio:16/9;border-radius:14px;background:{{ hero.thumbBg }};position:relative;overflow:hidden;box-shadow:inset 0 0 0 2px rgba(0,0,0,.5),inset 0 10px 30px rgba(255,255,255,.12)">
+                      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,monospace;font-size:11px;color:rgba(255,255,255,.7)">thumbnail da live</div>
+                      <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,0) 38%)"></div>
+                      <div style="position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.72);border-radius:6px;padding:5px 8px">
+                        <div style="display:flex;align-items:flex-end;gap:2px;height:12px">
+                          <div style="width:3px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .7s ease-in-out infinite alternate"></div>
+                          <div style="width:3px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .9s ease-in-out -.3s infinite alternate"></div>
+                          <div style="width:3px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .6s ease-in-out -.5s infinite alternate"></div>
+                        </div>
+                        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:#fff">AO VIVO</div>
+                      </div>
+                      <div style="position:absolute;bottom:10px;right:10px;background:{{ s.lcdBg }};border-radius:6px;padding:6px 8px;box-shadow:0 0 0 1px rgba(255,255,255,.25);font-family:DSEG14,VT323,monospace;font-size:16px;color:{{ s.lcdFg }};text-shadow:{{ s.lcdGlow }}">{{ hero.viewersTxt }}</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:4px;padding:0 6px;color:{{ s.frameInk }}">
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <div style="font-size:18px;font-weight:700">{{ hero.name }}</div>
+                        <div style="height:18px;padding:0 6px;border-radius:5px;background:{{ hero.pColor }};color:{{ hero.pInk }};font-size:10px;font-weight:700;display:flex;align-items:center;letter-spacing:.04em">{{ hero.pLabel }}</div>
+                        <div style="font-size:11px;font-weight:700;color:{{ s.frameMuted }}">{{ hero.langCode }}</div>
+                      </div>
+                      <div style="font-size:14px;line-height:1.35;text-wrap:pretty">{{ hero.title }}</div>
+                      <div style="font-size:12.5px;color:{{ s.frameMuted }}">{{ hero.cat }}</div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ showRows }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <sc-for list="{{ rowList }}" as="item" hint-placeholder-count="5">
+                      <div onClick="{{ item.open }}" style="display:flex;gap:12px;align-items:center;padding:8px 10px 8px 8px;background:{{ s.card }};border-radius:14px;box-shadow:0 0 0 1px {{ s.line }},0 1px 2px rgba(0,0,0,.06);cursor:pointer" style-hover="box-shadow:0 0 0 1px rgba(0,0,0,.18),0 4px 12px rgba(0,0,0,.1)">
+                        <div style="width:{{ thumbW }};aspect-ratio:16/9;border-radius:8px;background:{{ item.thumbBg }};flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 0 0 2px {{ s.bezelRing }},inset 0 0 0 1px rgba(0,0,0,.4)">
+                          <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.25) 0%,rgba(255,255,255,0) 45%)"></div>
+                          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,monospace;font-size:9px;color:rgba(255,255,255,.7)">thumb</div>
+                        </div>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                          <div style="display:flex;align-items:center;gap:7px;min-width:0">
+                            <div style="display:flex;align-items:flex-end;gap:2px;height:12px;flex-shrink:0">
+                              <div style="width:3px;height:100%;background:{{ s.eq }};transform-origin:bottom;animation:msEq .7s ease-in-out infinite alternate"></div>
+                              <div style="width:3px;height:100%;background:{{ s.eq }};transform-origin:bottom;animation:msEq .9s ease-in-out -.3s infinite alternate"></div>
+                              <div style="width:3px;height:100%;background:{{ s.eq }};transform-origin:bottom;animation:msEq .6s ease-in-out -.5s infinite alternate"></div>
+                            </div>
+                            <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.name }}</div>
+                            <div style="width:16px;height:16px;border-radius:4px;background:{{ item.pColor }};color:{{ item.pInk }};font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{ item.pLetter }}</div>
+                          </div>
+                          <div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.title }}</div>
+                          <div style="font-size:11.5px;color:{{ s.muted }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.cat }} · {{ item.langCode }}</div>
+                        </div>
+                        <div style="background:{{ s.lcdBg }};border-radius:7px;padding:6px 7px 5px;box-shadow:inset 0 1px 3px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.5);display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;min-width:52px;box-sizing:border-box">
+                          <div style="font-family:DSEG14,VT323,monospace;font-size:13px;color:{{ s.lcdFg }};text-shadow:{{ s.lcdGlow }}">{{ item.viewersTxt }}</div>
+                          <div style="font-size:8px;letter-spacing:.14em;font-weight:700;color:{{ s.lcdFg }}">VIEWERS</div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ showCards }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:grid;grid-template-columns:{{ cardCols }};gap:14px">
+                    <sc-for list="{{ live }}" as="item" hint-placeholder-count="4">
+                      <div onClick="{{ item.open }}" style="background:{{ s.card }};border-radius:18px;box-shadow:0 0 0 1px {{ s.line }},0 2px 6px rgba(0,0,0,.06);cursor:pointer;display:flex;flex-direction:column;overflow:hidden" style-hover="box-shadow:0 0 0 1px rgba(0,0,0,.2),0 8px 18px rgba(0,0,0,.12)">
+                        <div style="background:{{ s.frame }};padding:7px;box-shadow:inset 0 -1px 0 rgba(0,0,0,.2)">
+                          <div style="aspect-ratio:16/9;border-radius:10px;background:{{ item.thumbBg }};position:relative;overflow:hidden;box-shadow:inset 0 0 0 2px rgba(0,0,0,.5)">
+                            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,monospace;font-size:10px;color:rgba(255,255,255,.7)">thumbnail da live</div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,0) 40%)"></div>
+                            <div style="position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.72);border-radius:5px;padding:4px 7px">
+                              <div style="display:flex;align-items:flex-end;gap:2px;height:10px">
+                                <div style="width:2.5px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .7s ease-in-out infinite alternate"></div>
+                                <div style="width:2.5px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .9s ease-in-out -.3s infinite alternate"></div>
+                                <div style="width:2.5px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .6s ease-in-out -.5s infinite alternate"></div>
+                              </div>
+                              <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:#fff">AO VIVO</div>
+                            </div>
+                            <div style="position:absolute;bottom:8px;right:8px;background:{{ s.lcdBg }};border-radius:5px;padding:5px 7px;box-shadow:0 0 0 1px rgba(255,255,255,.25);font-family:DSEG14,VT323,monospace;font-size:13px;color:{{ s.lcdFg }};text-shadow:{{ s.lcdGlow }}">{{ item.viewersTxt }}</div>
+                          </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:4px;padding:10px 12px 12px">
+                          <div style="display:flex;align-items:center;gap:7px;min-width:0">
+                            <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.name }}</div>
+                            <div style="width:16px;height:16px;border-radius:4px;background:{{ item.pColor }};color:{{ item.pInk }};font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{ item.pLetter }}</div>
+                            <div style="font-size:11px;font-weight:700;color:{{ s.muted }}">{{ item.langCode }}</div>
+                          </div>
+                          <div style="font-size:13px;line-height:1.35;text-wrap:pretty">{{ item.title }}</div>
+                          <div style="font-size:11.5px;color:{{ s.muted }}">{{ item.cat }}</div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <button onClick="{{ toggleOff }}" style="display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 14px;margin-top:6px;border:none;border-radius:12px;background:{{ s.btn }};color:{{ s.btnInk }};font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.14em;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.6),inset 0 -3px 6px rgba(0,0,0,.2),0 2px 4px rgba(0,0,0,.14)">
+                  <div>OFFLINE · {{ offCount }}</div>
+                  <div style="font-size:14px;letter-spacing:0">{{ offArrow }}</div>
+                </button>
+                <sc-if value="{{ offOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <sc-for list="{{ offline }}" as="item" hint-placeholder-count="4">
+                      <div onClick="{{ item.open }}" style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;background:{{ s.card }};box-shadow:0 0 0 1px {{ s.line }};cursor:pointer">
+                        <div style="width:36px;height:36px;border-radius:50%;background:{{ item.avatarBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;filter:grayscale(.6)">{{ item.initial }}</div>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                          <div style="display:flex;align-items:center;gap:7px">
+                            <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.name }}</div>
+                            <div style="width:15px;height:15px;border-radius:4px;background:{{ item.pColor }};color:{{ item.pInk }};font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{ item.pLetter }}</div>
+                          </div>
+                          <div style="font-size:12px;color:{{ s.muted }}">{{ item.offTxt }}</div>
+                        </div>
+                        <button onClick="{{ item.stopToggle }}" style="height:28px;padding:0 10px;border-radius:999px;border:1px solid {{ s.line }};background:{{ item.bellBg }};color:{{ item.bellInk }};font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">{{ item.bellTxt }}</button>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isAdd }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;gap:8px;background:{{ s.field }};border-radius:14px;padding:0 6px 0 14px;box-shadow:inset 0 2px 4px rgba(0,0,0,.12),0 0 0 1px {{ s.line }}">
+                  <input value="{{ q }}" onChange="{{ onQ }}" placeholder="Cole o link ou busque pelo nome" style="flex:1;min-width:0;height:48px;border:none;outline:none;background:transparent;color:{{ s.ink }};font-family:inherit;font-size:15px"></input>
+                  <sc-if value="{{ hasQ }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ clearQ }}" style="width:30px;height:30px;border-radius:50%;border:none;background:{{ s.btn }};color:{{ s.btnInk }};font-family:inherit;cursor:pointer;font-size:14px;box-shadow:inset 0 1px 1px rgba(255,255,255,.8),inset 0 -2px 4px rgba(0,0,0,.25)">×</button>
+                  </sc-if>
+                </div>
+
+                <sc-if value="{{ addEmpty }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-direction:column;gap:14px">
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                      <div style="font-size:12px;font-weight:700;letter-spacing:.14em;color:{{ s.muted }}">EXPERIMENTE COLAR</div>
+                      <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        <sc-for list="{{ samples }}" as="sm" hint-placeholder-count="3">
+                          <button onClick="{{ sm.fill }}" style="border:1px solid {{ s.line }};background:{{ s.card }};color:{{ s.ink }};border-radius:999px;padding:7px 12px;font-family:ui-monospace,monospace;font-size:12px;cursor:pointer;white-space:nowrap">{{ sm.url }}</button>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:{{ waysCols }};gap:10px">
+                      <div style="background:{{ s.card }};border-radius:14px;padding:14px;box-shadow:0 0 0 1px {{ s.line }};display:flex;flex-direction:column;gap:4px">
+                        <div style="font-size:14px;font-weight:700">Colar o link</div>
+                        <div style="font-size:12.5px;line-height:1.4;color:{{ s.muted }}">A gente reconhece se é Twitch, YouTube ou Kick.</div>
+                      </div>
+                      <div style="background:{{ s.card }};border-radius:14px;padding:14px;box-shadow:0 0 0 1px {{ s.line }};display:flex;flex-direction:column;gap:4px">
+                        <div style="font-size:14px;font-weight:700">Buscar pelo nome</div>
+                        <div style="font-size:12.5px;line-height:1.4;color:{{ s.muted }}">No YouTube, o @handle acha o canal certo.</div>
+                      </div>
+                      <button onClick="{{ goImport }}" style="background:{{ s.frame }};border:none;border-radius:14px;padding:14px;box-shadow:inset 0 2px 1px rgba(255,255,255,.7),inset 0 -3px 6px rgba(0,0,0,.2),0 2px 5px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:4px;text-align:left;font-family:inherit;color:{{ s.frameInk }};cursor:pointer">
+                        <div style="font-size:14px;font-weight:700">Importar seguidos ›</div>
+                        <div style="font-size:12.5px;line-height:1.4;color:{{ s.frameMuted }}">Traga quem você segue na Twitch e no YouTube.</div>
+                      </button>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ badLink }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:16px;background:{{ s.card }};box-shadow:0 0 0 1px {{ s.line }};animation:msRise .25s ease-out">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="background:{{ s.lcdBg }};border-radius:7px;padding:6px 8px;box-shadow:inset 0 1px 3px rgba(0,0,0,.9);font-family:DSEG14,VT323,monospace;font-size:13px;color:#ffb347;text-shadow:0 0 6px rgba(255,179,71,.7)">ERRO</div>
+                      <div style="font-size:16px;font-weight:700">Link não reconhecido</div>
+                    </div>
+                    <div style="font-size:13.5px;line-height:1.45;color:{{ s.muted }};text-wrap:pretty">Por enquanto aceitamos canais da Twitch, do YouTube e da Kick. Confira se o link é de um destes formatos:</div>
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                      <div style="font-family:ui-monospace,monospace;font-size:12.5px;padding:8px 10px;border-radius:8px;background:{{ s.field }}">twitch.tv/nome</div>
+                      <div style="font-family:ui-monospace,monospace;font-size:12.5px;padding:8px 10px;border-radius:8px;background:{{ s.field }}">youtube.com/@handle</div>
+                      <div style="font-family:ui-monospace,monospace;font-size:12.5px;padding:8px 10px;border-radius:8px;background:{{ s.field }}">kick.com/nome</div>
+                    </div>
+                    <button onClick="{{ clearQ }}" style="height:42px;border:none;border-radius:999px;background:{{ s.btn }};color:{{ s.btnInk }};font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.7),inset 0 -3px 6px rgba(0,0,0,.25)">Buscar pelo nome</button>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ detected }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:12px;animation:msRise .25s ease-out">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600">
+                      <div style="width:18px;height:18px;border-radius:5px;background:{{ det.pColor }};color:{{ det.pInk }};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ det.pLetter }}</div>
+                      <div>Link {{ det.pPrep }} {{ det.pLabel }} detectado</div>
+                    </div>
+                    <div style="background:{{ s.card }};border-radius:16px;padding:14px;box-shadow:0 0 0 1px {{ s.line }},0 4px 12px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:14px">
+                      <div style="display:flex;align-items:center;gap:12px">
+                        <div style="width:48px;height:48px;border-radius:50%;background:{{ det.avatarBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px">{{ det.initial }}</div>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                          <div style="font-size:16px;font-weight:700">{{ det.name }}</div>
+                          <div style="font-size:12.5px;color:{{ s.muted }}">{{ det.sub }}</div>
+                        </div>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:8px">
+                        <div style="font-size:12px;font-weight:600;color:{{ s.muted }}">Idioma do streamer (usado quando a plataforma não informa)</div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap">
+                          <sc-for list="{{ addLangOpts }}" as="l" hint-placeholder-count="3">
+                            <button onClick="{{ l.pick }}" style="height:32px;padding:0 12px;border-radius:999px;border:none;background:{{ l.bg }};color:{{ l.ink }};box-shadow:{{ l.shadow }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">{{ l.name }}</button>
+                          </sc-for>
+                        </div>
+                      </div>
+                      <button onClick="{{ det.add }}" style="height:46px;border:none;border-radius:999px;background:{{ det.btnBg }};color:{{ det.btnInk }};font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.35),inset 0 -3px 6px rgba(0,0,0,.25)">{{ det.btnTxt }}</button>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ searching }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;background:{{ s.frame }};border-radius:12px;padding:3px;gap:3px;box-shadow:inset 0 1px 3px rgba(0,0,0,.25)">
+                      <sc-for list="{{ platTabs }}" as="pt" hint-placeholder-count="3">
+                        <button onClick="{{ pt.pick }}" style="flex:1;height:34px;border:none;border-radius:9px;background:{{ pt.bg }};color:{{ pt.ink }};box-shadow:{{ pt.shadow }};font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">{{ pt.label }}</button>
+                      </sc-for>
+                    </div>
+                    <sc-if value="{{ ytHint }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-size:12.5px;line-height:1.4;padding:10px 12px;border-radius:10px;background:{{ s.card }};box-shadow:0 0 0 1px {{ s.line }};color:{{ s.ink }}">Dica: busque pelo <strong>@handle</strong> do canal. Nomes no YouTube se repetem muito.</div>
+                    </sc-if>
+                    <sc-for list="{{ results }}" as="r" hint-placeholder-count="3">
+                      <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:{{ s.card }};box-shadow:0 0 0 1px {{ s.line }}">
+                        <div style="width:38px;height:38px;border-radius:50%;background:{{ r.avatarBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">{{ r.initial }}</div>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                          <div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div>
+                          <div style="font-size:12px;color:{{ s.muted }}">{{ r.sub }}</div>
+                        </div>
+                        <button onClick="{{ r.add }}" style="height:32px;padding:0 14px;border:none;border-radius:999px;background:{{ r.btnBg }};color:{{ r.btnInk }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0">{{ r.btnTxt }}</button>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isImport }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="font-size:13.5px;line-height:1.45;color:{{ s.muted }};text-wrap:pretty">Entre com sua conta para trazer quem você já segue. Você escolhe quem entra na lista.</div>
+                <sc-for list="{{ importCards }}" as="c" hint-placeholder-count="2">
+                  <div style="background:{{ s.card }};border-radius:16px;padding:14px;box-shadow:0 0 0 1px {{ s.line }};display:flex;flex-direction:column;gap:12px">
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <div style="width:36px;height:36px;border-radius:10px;background:{{ c.pColor }};color:{{ c.pInk }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0">{{ c.pLetter }}</div>
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <div style="font-size:15px;font-weight:700">{{ c.title }}</div>
+                        <div style="font-size:12.5px;color:{{ s.muted }}">{{ c.sub }}</div>
+                      </div>
+                      <sc-if value="{{ c.showConnect }}" hint-placeholder-val="{{ true }}">
+                        <button onClick="{{ c.connect }}" style="height:34px;padding:0 14px;border:none;border-radius:999px;background:{{ c.pColor }};color:{{ c.pInk }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0">{{ c.connectTxt }}</button>
+                      </sc-if>
+                    </div>
+                    <sc-if value="{{ c.showList }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;flex-direction:column;gap:2px;border-top:1px solid {{ s.line }};padding-top:8px">
+                        <sc-for list="{{ c.list }}" as="ch" hint-placeholder-count="4">
+                          <button onClick="{{ ch.toggle }}" style="display:flex;align-items:center;gap:10px;height:40px;border:none;background:transparent;color:{{ s.ink }};font-family:inherit;font-size:14px;cursor:pointer;padding:0 4px;text-align:left">
+                            <div style="width:20px;height:20px;border-radius:6px;background:{{ ch.boxBg }};color:{{ s.accentInk }};box-shadow:inset 0 0 0 1.5px {{ ch.boxRing }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">{{ ch.mark }}</div>
+                            <div style="flex:1;min-width:0">{{ ch.name }}</div>
+                            <div style="font-size:11.5px;color:{{ s.muted }}">{{ ch.note }}</div>
+                          </button>
+                        </sc-for>
+                        <button onClick="{{ c.doImport }}" style="height:44px;margin-top:6px;border:none;border-radius:999px;background:{{ s.accent }};color:{{ s.accentInk }};font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.35),inset 0 -3px 6px rgba(0,0,0,.25)">{{ c.importTxt }}</button>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+                <div style="background:{{ s.card }};border-radius:16px;padding:14px;box-shadow:0 0 0 1px {{ s.line }};display:flex;align-items:center;gap:12px">
+                  <div style="width:36px;height:36px;border-radius:10px;background:#53fc18;color:#0b0b0b;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0">K</div>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:15px;font-weight:700">Kick</div>
+                    <div style="font-size:12.5px;color:{{ s.muted }}">Sem importação. Adicione pelo link do canal.</div>
+                  </div>
+                  <button onClick="{{ goAdd }}" style="height:34px;padding:0 14px;border:1px solid {{ s.line }};border-radius:999px;background:{{ s.field }};color:{{ s.ink }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0">Colar link</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="background:{{ s.frame }};border-radius:18px;padding:14px;box-shadow:inset 0 2px 1px rgba(255,255,255,.7),inset 0 -3px 6px rgba(0,0,0,.22),0 3px 8px rgba(0,0,0,.14);display:flex;align-items:center;gap:12px;color:{{ s.frameInk }}">
+                  <div style="width:44px;height:44px;border-radius:50%;background:{{ accountAvatar }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0">{{ accountInitial }}</div>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:15px;font-weight:700">{{ accountTitle }}</div>
+                    <div style="font-size:12.5px;color:{{ s.frameMuted }};text-wrap:pretty">{{ accountSub }}</div>
+                  </div>
+                  <button onClick="{{ accountAction }}" style="height:34px;padding:0 14px;border:none;border-radius:999px;background:{{ s.btn }};color:{{ s.btnInk }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0;box-shadow:inset 0 2px 1px rgba(255,255,255,.8),inset 0 -2px 4px rgba(0,0,0,.25),0 1px 3px rgba(0,0,0,.2)">{{ accountBtn }}</button>
+                </div>
+                <div style="background:{{ s.card }};border-radius:16px;box-shadow:0 0 0 1px {{ s.line }};display:flex;flex-direction:column;overflow:hidden">
+                  <sc-for list="{{ settingsItems }}" as="it" hint-placeholder-count="4">
+                    <button onClick="{{ it.go }}" style="display:flex;align-items:center;gap:12px;min-height:54px;padding:0 14px;border:none;border-bottom:1px solid {{ s.line }};background:transparent;color:{{ s.ink }};font-family:inherit;cursor:pointer;text-align:left">
+                      <div style="flex:1;font-size:15px;font-weight:600">{{ it.label }}</div>
+                      <div style="font-size:13px;color:{{ s.muted }}">{{ it.value }}</div>
+                      <div style="font-size:18px;color:{{ s.muted }}">›</div>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isLanguages }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="font-size:13.5px;line-height:1.45;color:{{ s.muted }};text-wrap:pretty">A aba Ao vivo mostra só as lives nas línguas marcadas, sempre de quem tem mais viewers para quem tem menos.</div>
+                <div style="display:flex;gap:8px">
+                  <button onClick="{{ langMine }}" style="height:34px;padding:0 14px;border-radius:999px;border:1px solid {{ s.line }};background:{{ s.card }};color:{{ s.ink }};font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Só as minhas</button>
+                  <button onClick="{{ langAll }}" style="height:34px;padding:0 14px;border-radius:999px;border:1px solid {{ s.line }};background:{{ s.card }};color:{{ s.ink }};font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Marcar todas</button>
+                </div>
+                <div style="display:grid;grid-template-columns:{{ langCols }};gap:2px;background:{{ s.card }};border-radius:16px;box-shadow:0 0 0 1px {{ s.line }};padding:6px">
+                  <sc-for list="{{ langItems }}" as="l" hint-placeholder-count="6">
+                    <button onClick="{{ l.toggle }}" style="display:flex;align-items:center;gap:12px;min-height:50px;padding:0 12px;border:none;border-radius:10px;background:{{ l.rowBg }};color:{{ s.ink }};font-family:inherit;cursor:pointer;text-align:left">
+                      <div style="width:22px;height:22px;border-radius:6px;background:{{ l.boxBg }};color:{{ s.accentInk }};box-shadow:inset 0 0 0 1.5px {{ l.boxRing }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">{{ l.mark }}</div>
+                      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px">
+                        <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.name }}</div>
+                        <sc-if value="{{ l.hasTag }}" hint-placeholder-val="{{ false }}"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;padding:2px 6px;border-radius:4px;background:{{ s.lcdBg }};color:{{ s.lcdFg }};white-space:nowrap">{{ l.tag }}</div></sc-if>
+                      </div>
+                      <div style="font-size:12px;font-weight:700;color:{{ s.muted }};white-space:nowrap">{{ l.count }}</div>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isNotifications }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:{{ s.frame }};border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;color:{{ s.frameInk }};box-shadow:inset 0 2px 1px rgba(255,255,255,.7),inset 0 -3px 6px rgba(0,0,0,.2)">
+                    <div style="flex:1;font-size:13px;line-height:1.4;text-wrap:pretty">Push precisa de conta. Entre para receber avisos no celular.</div>
+                    <button onClick="{{ goOnboarding }}" style="height:34px;padding:0 14px;border:none;border-radius:999px;background:{{ s.accent }};color:{{ s.accentInk }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0">Entrar</button>
+                  </div>
+                </sc-if>
+                <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:{{ s.card }};box-shadow:0 0 0 1px {{ s.line }}">
+                  <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+                    <div style="font-size:15px;font-weight:700">Avisar quando entrarem ao vivo</div>
+                    <div style="font-size:12.5px;color:{{ s.muted }}">{{ notifySummary }}</div>
+                  </div>
+                  <button onClick="{{ toggleAll }}" style="width:52px;height:30px;border-radius:999px;border:none;background:{{ allSw.bg }};box-shadow:inset 0 2px 4px rgba(0,0,0,.35);position:relative;cursor:pointer;flex-shrink:0;padding:0">
+                    <div style="position:absolute;top:3px;left:{{ allSw.x }};width:24px;height:24px;border-radius:50%;background:{{ s.btn }};box-shadow:inset 0 1px 1px rgba(255,255,255,.9),0 1px 3px rgba(0,0,0,.4);transition:left .18s"></div>
+                  </button>
+                </div>
+                <div style="display:flex;flex-direction:column;background:{{ s.card }};border-radius:16px;box-shadow:0 0 0 1px {{ s.line }};overflow:hidden;opacity:{{ listOp }}">
+                  <sc-for list="{{ notifyList }}" as="item" hint-placeholder-count="6">
+                    <div onClick="{{ item.openDetail }}" style="display:flex;align-items:center;gap:12px;min-height:56px;padding:0 14px;border-bottom:1px solid {{ s.line }};cursor:pointer">
+                      <div style="width:32px;height:32px;border-radius:50%;background:{{ item.avatarBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">{{ item.initial }}</div>
+                      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:7px">
+                        <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ item.name }}</div>
+                        <div style="width:15px;height:15px;border-radius:4px;background:{{ item.pColor }};color:{{ item.pInk }};font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{ item.pLetter }}</div>
+                      </div>
+                      <button onClick="{{ item.stopToggle }}" style="width:46px;height:27px;border-radius:999px;border:none;background:{{ item.swBg }};box-shadow:inset 0 2px 4px rgba(0,0,0,.35);position:relative;cursor:pointer;flex-shrink:0;padding:0">
+                        <div style="position:absolute;top:3px;left:{{ item.swX }};width:21px;height:21px;border-radius:50%;background:{{ s.btn }};box-shadow:inset 0 1px 1px rgba(255,255,255,.9),0 1px 3px rgba(0,0,0,.4);transition:left .18s"></div>
+                      </button>
+                    </div>
+                  </sc-for>
+                </div>
+                <button onClick="{{ firePush }}" style="height:46px;border:none;border-radius:999px;background:{{ s.btn }};color:{{ s.btnInk }};font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.7),inset 0 -3px 6px rgba(0,0,0,.25),0 2px 5px rgba(0,0,0,.18)">Enviar notificação de teste</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px;max-width:560px;width:100%;margin:0 auto">
+                <div style="background:{{ s.frame }};border-radius:22px;padding:22px 16px 16px;box-shadow:inset 0 2px 1px rgba(255,255,255,.8),inset 0 -3px 6px rgba(0,0,0,.25),0 8px 20px rgba(0,0,0,.16);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;color:{{ s.frameInk }}">
+                  <div style="width:92px;height:92px;border-radius:50%;background:{{ s.btn }};padding:5px;box-sizing:border-box;box-shadow:inset 0 2px 1px rgba(255,255,255,.9),inset 0 -3px 6px rgba(0,0,0,.3),0 4px 10px rgba(0,0,0,.25)">
+                    <div style="width:100%;height:100%;border-radius:50%;background:{{ d.avatarBg }};filter:{{ d.avatarFilter }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:34px">{{ d.initial }}</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <div style="font-size:22px;font-weight:700">{{ d.name }}</div>
+                      <div style="height:20px;padding:0 7px;border-radius:5px;background:{{ d.pColor }};color:{{ d.pInk }};font-size:11px;font-weight:700;display:flex;align-items:center">{{ d.pLabel }}</div>
+                    </div>
+                    <div style="font-size:13px;color:{{ s.frameMuted }}">{{ d.handleTxt }}</div>
+                  </div>
+                  <div style="background:{{ s.lcdBg }};border-radius:10px;padding:8px 14px;box-shadow:inset 0 2px 5px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.5);display:flex;align-items:center;gap:10px">
+                    <sc-if value="{{ d.live }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;align-items:flex-end;gap:2px;height:14px">
+                        <div style="width:3px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .7s ease-in-out infinite alternate"></div>
+                        <div style="width:3px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .9s ease-in-out -.3s infinite alternate"></div>
+                        <div style="width:3px;height:100%;background:{{ s.lcdFg }};transform-origin:bottom;animation:msEq .6s ease-in-out -.5s infinite alternate"></div>
+                      </div>
+                    </sc-if>
+                    <div style="font-family:DSEG14,VT323,monospace;font-size:15px;color:{{ d.lcdInk }};text-shadow:{{ d.lcdShadow }}">{{ d.lcdTxt }}</div>
+                  </div>
+                  <div style="font-size:12.5px;color:{{ s.frameMuted }}">{{ d.statusSub }}</div>
+                </div>
+
+                <sc-if value="{{ d.live }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ d.open }}" style="display:flex;gap:12px;align-items:center;padding:10px;border-radius:16px;background:{{ s.card }};box-shadow:0 0 0 1px {{ s.line }};cursor:pointer">
+                    <div style="width:120px;aspect-ratio:16/9;border-radius:9px;background:{{ d.thumbBg }};flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 0 0 2px {{ s.bezelRing }}">
+                      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,monospace;font-size:9px;color:rgba(255,255,255,.7)">thumb</div>
+                    </div>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                      <div style="font-size:14px;font-weight:600;line-height:1.3;text-wrap:pretty">{{ d.title }}</div>
+                      <div style="font-size:12px;color:{{ s.muted }}">{{ d.cat }}</div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <button onClick="{{ d.open }}" style="height:50px;border:none;border-radius:999px;background:{{ d.pColor }};color:{{ d.pInk }};font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:inset 0 2px 1px rgba(255,255,255,.35),inset 0 -3px 6px rgba(0,0,0,.25),0 3px 8px rgba(0,0,0,.2)">{{ d.openTxt }}</button>
+
+                <div style="display:flex;flex-direction:column;background:{{ s.card }};border-radius:16px;box-shadow:0 0 0 1px {{ s.line }};overflow:hidden">
+                  <div style="display:flex;align-items:center;gap:12px;min-height:58px;padding:0 14px;border-bottom:1px solid {{ s.line }}">
+                    <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+                      <div style="font-size:15px;font-weight:600">Avisar quando entrar ao vivo</div>
+                      <div style="font-size:12px;color:{{ s.muted }}">{{ d.notifySub }}</div>
+                    </div>
+                    <button onClick="{{ d.toggleNotify }}" style="width:52px;height:30px;border-radius:999px;border:none;background:{{ d.swBg }};box-shadow:inset 0 2px 4px rgba(0,0,0,.35);position:relative;cursor:pointer;flex-shrink:0;padding:0">
+                      <div style="position:absolute;top:3px;left:{{ d.swX2 }};width:24px;height:24px;border-radius:50%;background:{{ s.btn }};box-shadow:inset 0 1px 1px rgba(255,255,255,.9),0 1px 3px rgba(0,0,0,.4);transition:left .18s"></div>
+                    </button>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:10px;padding:14px">
+                    <div style="display:flex;flex-direction:column;gap:2px">
+                      <div style="font-size:15px;font-weight:600">Idioma do streamer</div>
+                      <div style="font-size:12px;color:{{ s.muted }}">Usado no filtro de línguas quando a plataforma não informa.</div>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px">
+                      <sc-for list="{{ dLangs }}" as="l" hint-placeholder-count="5">
+                        <button onClick="{{ l.pick }}" style="height:32px;padding:0 12px;border-radius:999px;border:none;background:{{ l.bg }};color:{{ l.ink }};box-shadow:{{ l.shadow }};font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">{{ l.name }}</button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+
+                <sc-if value="{{ showRm }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ askRm }}" style="height:46px;border:1px solid {{ s.line }};border-radius:999px;background:transparent;color:#d23b3b;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Remover da lista</button>
+                </sc-if>
+                <sc-if value="{{ confirmRm }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;background:{{ s.card }};box-shadow:0 0 0 1px rgba(210,59,59,.45);animation:msRise .2s ease-out">
+                    <div style="font-size:14px;font-weight:600;line-height:1.4;text-wrap:pretty">Remover {{ d.name }}? Você para de receber avisos deste canal.</div>
+                    <div style="display:flex;gap:8px">
+                      <button onClick="{{ cancelRm }}" style="flex:1;height:42px;border:1px solid {{ s.line }};border-radius:999px;background:{{ s.field }};color:{{ s.ink }};font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Cancelar</button>
+                      <button onClick="{{ doRm }}" style="flex:1;height:42px;border:none;border-radius:999px;background:#d23b3b;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Remover</button>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isSkins }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:grid;grid-template-columns:{{ skinCols }};gap:12px">
+                  <sc-for list="{{ skinTiles }}" as="k" hint-placeholder-count="3">
+                    <button onClick="{{ k.pick }}" style="border:none;padding:0;background:transparent;font-family:inherit;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:8px">
+                      <div style="border-radius:18px;overflow:hidden;box-shadow:{{ k.ring }};display:flex;flex-direction:column">
+                        <div style="background:{{ k.frame }};height:48px;display:flex;align-items:center;gap:8px;padding:0 12px">
+                          <div style="width:22px;height:22px;border-radius:50%;background:{{ k.btn }};box-shadow:inset 0 1px 1px rgba(255,255,255,.8),inset 0 -2px 3px rgba(0,0,0,.3)"></div>
+                          <div style="width:22px;height:22px;border-radius:50%;background:{{ k.btn }};box-shadow:inset 0 1px 1px rgba(255,255,255,.8),inset 0 -2px 3px rgba(0,0,0,.3)"></div>
+                          <div style="flex:1"></div>
+                          <div style="background:{{ k.lcdBg }};border-radius:5px;padding:4px 6px;font-family:DSEG14,VT323,monospace;font-size:11px;color:{{ k.lcdFg }};text-shadow:{{ k.lcdGlow }}">12.4K</div>
+                        </div>
+                        <div style="background:{{ k.panel }};padding:10px 12px;display:flex;flex-direction:column;gap:6px">
+                          <div style="height:12px;border-radius:4px;background:{{ k.card }};width:80%"></div>
+                          <div style="height:12px;border-radius:4px;background:{{ k.card }};width:60%"></div>
+                        </div>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:8px;padding:0 4px">
+                        <div style="font-size:14px;font-weight:700;color:{{ s.ink }}">{{ k.name }}</div>
+                        <sc-if value="{{ k.selected }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;padding:3px 6px;border-radius:5px;background:{{ s.accent }};color:{{ s.accentInk }}">EM USO</div>
+                        </sc-if>
+                      </div>
+                    </button>
+                  </sc-for>
+                </div>
+                <div style="font-size:12.5px;color:{{ s.muted }}">Mais skins chegam com o plano pago.</div>
+              </div>
+            </sc-if>
+
+          </div>
+        </div>
+
+        <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ true }}">
+          <div style="background:{{ s.frame }};padding:8px 18px 0;display:flex;flex-direction:column;gap:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 -3px 10px rgba(0,0,0,.14);position:relative;z-index:2;flex-shrink:0">
+            <div style="display:flex;justify-content:space-around;gap:8px">
+              <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+                <button onClick="{{ t.go }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;border:none;background:transparent;font-family:inherit;cursor:pointer;padding:0;min-width:64px">
+                  <div style="width:{{ t.w }};height:40px;border-radius:999px;background:{{ t.bg }};color:{{ t.ink }};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;box-shadow:{{ t.shadow }}">{{ t.glyph }}</div>
+                  <div style="font-size:11px;font-weight:600;color:{{ s.frameInk }}">{{ t.label }}</div>
+                </button>
+              </sc-for>
+            </div>
+            <div style="height:{{ homeH }};display:flex;align-items:center;justify-content:center">
+              <div style="width:{{ homeW }};height:5px;border-radius:3px;background:{{ s.frameInk }}"></div>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasPush }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ push.open }}" style="position:absolute;top:{{ pushTop }};right:{{ pushSide }};left:{{ pushLeft }};width:{{ pushW }};z-index:20;cursor:pointer;animation:{{ pushAnim }};background:{{ pushBg }};backdrop-filter:blur(16px);border-radius:{{ pushRadius }};padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.3),0 0 0 1px rgba(0,0,0,.06);display:flex;gap:12px;align-items:flex-start;color:#15171c;box-sizing:border-box">
+      <div style="width:38px;height:38px;border-radius:50%;background-image:url(assets/logo-round.png);background-size:100%;background-position:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.25)"></div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:#565b66;letter-spacing:.02em">
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:12px;flex-shrink:0;background:#565b66;-webkit-mask:url(assets/icon-mono-white.png) center/contain no-repeat;mask:url(assets/icon-mono-white.png) center/contain no-repeat"></div><div>MULTISTREAMS</div></div>
+          <div>agora</div>
+        </div>
+        <div style="font-size:14px;font-weight:700">{{ push.name }} está ao vivo</div>
+        <div style="font-size:13px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ push.title }} · {{ push.pLabel }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasOpening }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:0;right:0;bottom:{{ toastBottom }};display:flex;justify-content:center;z-index:19;pointer-events:none;padding:0 16px">
+      <div style="display:flex;align-items:center;gap:10px;background:{{ s.lcdBg }};color:{{ s.lcdFg }};border-radius:14px;padding:12px 16px;box-shadow:0 10px 26px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.15);animation:msRise .25s ease-out;max-width:100%">
+        <div style="width:18px;height:18px;border-radius:5px;background:{{ opening.pColor }};color:{{ opening.pInk }};font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{ opening.pLetter }}</div>
+        <div style="font-size:13.5px;font-weight:600;text-shadow:{{ s.lcdGlow }}">{{ openingTxt }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:0;right:0;bottom:{{ toastBottom }};display:flex;justify-content:center;z-index:18;pointer-events:none;padding:0 16px">
+      <div style="background:{{ s.lcdBg }};color:{{ s.lcdFg }};border-radius:14px;padding:12px 16px;box-shadow:0 10px 26px rgba(0,0,0,.35);font-size:13.5px;font-weight:600;text-shadow:{{ s.lcdGlow }};animation:msRise .25s ease-out">{{ toast }}</div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;platform&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ios&quot;,&quot;android&quot;,&quot;web&quot;],&quot;default&quot;:&quot;ios&quot;,&quot;tsType&quot;:&quot;'ios'|'android'|'web'&quot;},&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;lista&quot;,&quot;telas&quot;,&quot;destaque&quot;],&quot;default&quot;:&quot;destaque&quot;,&quot;tsType&quot;:&quot;'lista'|'telas'|'destaque'&quot;},&quot;skin&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;prata&quot;,&quot;azul&quot;,&quot;preto&quot;],&quot;default&quot;:&quot;prata&quot;,&quot;tsType&quot;:&quot;'prata'|'azul'|'preto'&quot;},&quot;start&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;onboarding&quot;,&quot;radar&quot;,&quot;add&quot;,&quot;import&quot;,&quot;settings&quot;,&quot;languages&quot;,&quot;notifications&quot;,&quot;skins&quot;,&quot;detail&quot;,&quot;empty&quot;,&quot;nonet&quot;,&quot;badlink&quot;],&quot;default&quot;:&quot;radar&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const PLAT = {
+  twitch: { label: 'Twitch', letter: 'T', color: '#7c3aed', ink: '#fff', app: 'app da Twitch', prep: 'da' },
+  youtube: { label: 'YouTube', letter: 'Y', color: '#e11d2a', ink: '#fff', app: 'app do YouTube', prep: 'do' },
+  kick: { label: 'Kick', letter: 'K', color: '#53fc18', ink: '#0b0b0b', app: 'app da Kick', prep: 'da' }
+};
+const LANGS = { pt: 'Português', en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', it: 'Italiano', ja: '日本語', ko: '한국어' };
+const LOCAL = (() => { const l = (typeof navigator !== 'undefined' && navigator.language || 'pt').slice(0, 2).toLowerCase(); return LANGS[l] ? l : 'pt'; })();
+const LANG_ORDER = [LOCAL, ...(LOCAL === 'en' ? [] : ['en']), ...Object.keys(LANGS).filter(k => k !== LOCAL && k !== 'en')];
+const SKINS = {
+  prata: { name: 'Cromado prata', frameTop: '#f7f8f9', frame: 'linear-gradient(180deg,#f7f8f9 0%,#d6d9de 24%,#f0f1f3 48%,#b3b8c0 74%,#dcdfe3 90%,#c4c8ce 100%)', frameInk: '#16181d', frameMuted: '#454a53', panel: '#eceef1', card: '#ffffff', line: 'rgba(20,24,32,.10)', ink: '#15171c', muted: '#5a606b', lcdBg: 'linear-gradient(180deg,#08120d,#0e1d15)', lcdFg: '#62ff9f', lcdGlow: '0 0 6px rgba(98,255,159,.7)', btn: 'radial-gradient(circle at 35% 28%,#ffffff 0%,#e4e6ea 40%,#a4a9b1 100%)', btnInk: '#16181d', btnOn: 'radial-gradient(circle at 35% 28%,#e3f6ff 0%,#8ec5f0 45%,#3a73b4 100%)', btnOnInk: '#06203d', bezelRing: '#c6c9cf', accent: '#2f63d6', accentInk: '#ffffff', field: '#f7f8fa', eq: '#12a150', swOn: '#2f63d6', swOff: '#b9bdc4' },
+  azul: { name: 'Azul metálico', frameTop: '#e8f0ff', frame: 'linear-gradient(180deg,#e8f0ff 0%,#a9c2ef 24%,#dae6fc 48%,#7394d4 74%,#b5cbf2 90%,#8eaae0 100%)', frameInk: '#08142e', frameMuted: '#1d3264', panel: '#e3e9f4', card: '#fbfcff', line: 'rgba(16,36,80,.12)', ink: '#0d172e', muted: '#475775', lcdBg: 'linear-gradient(180deg,#03101c,#08192b)', lcdFg: '#6fd6ff', lcdGlow: '0 0 6px rgba(111,214,255,.8)', btn: 'radial-gradient(circle at 35% 28%,#ffffff 0%,#c8d8f7 40%,#6283c7 100%)', btnInk: '#08142e', btnOn: 'radial-gradient(circle at 35% 28%,#fff5dc 0%,#ffc86e 45%,#c27812 100%)', btnOnInk: '#3a2100', bezelRing: '#9fb6e4', accent: '#1f4bb0', accentInk: '#ffffff', field: '#f4f7fd', eq: '#1476c8', swOn: '#1f4bb0', swOff: '#aab7cf' },
+  preto: { name: 'Preto fosco', frameTop: '#3a3c41', frame: 'linear-gradient(180deg,#3a3c41 0%,#242529 32%,#2d2f33 60%,#151618 100%)', frameInk: '#eceef2', frameMuted: '#a6aab3', panel: '#131417', card: '#1d1e22', line: 'rgba(255,255,255,.09)', ink: '#eef0f3', muted: '#9ba1ab', lcdBg: 'linear-gradient(180deg,#030603,#081008)', lcdFg: '#8dff5c', lcdGlow: '0 0 6px rgba(141,255,92,.65)', btn: 'radial-gradient(circle at 35% 28%,#63666c 0%,#34363a 45%,#18191b 100%)', btnInk: '#eceef2', btnOn: 'radial-gradient(circle at 35% 28%,#e4ffd6 0%,#8dff5c 45%,#2e8612 100%)', btnOnInk: '#0b2002', bezelRing: '#3a3c41', accent: '#8dff5c', accentInk: '#0b1a05', field: '#232428', eq: '#8dff5c', swOn: '#6fd13f', swOff: '#45474d' }
+};
+const DATA = [
+  { id: 's1', name: 'luminara', plat: 'twitch', lang: 'pt', live: true, viewers: 18420, title: 'Celeste 100% — tentando o any% abaixo de 30min', cat: 'Celeste', hue: 280, notify: true },
+  { id: 's2', name: 'Nico Turbo', handle: '@nicoturbo', plat: 'youtube', lang: 'pt', live: true, viewers: 6210, title: 'Montando um PC só com peças de 2003', cat: 'Ciência e tecnologia', hue: 18, notify: true },
+  { id: 's3', name: 'ravenfall', plat: 'kick', lang: 'en', live: true, viewers: 31200, title: 'ranked grind until diamond or bust', cat: 'Valorant', hue: 150, notify: false },
+  { id: 's4', name: 'PixelTia', plat: 'twitch', lang: 'en', live: true, viewers: 2890, title: 'cozy pixel art + lofi, drawing your pets', cat: 'Arte', hue: 330, notify: true },
+  { id: 's5', name: 'vale.gg', plat: 'youtube', handle: '@valegg', lang: 'es', live: true, viewers: 9400, title: 'Reaccionando a sus setups (parte 4)', cat: 'Charlando', hue: 200, notify: false },
+  { id: 's6', name: 'mariaflux', plat: 'kick', lang: 'pt', live: true, viewers: 1240, title: 'Café, conversa e planejando a semana', cat: 'Conversa', hue: 45, notify: true },
+  { id: 's11', name: 'kurokami', plat: 'twitch', lang: 'ja', live: true, viewers: 14800, title: 'スプラトゥーン3 フェス参加型', cat: 'Splatoon 3', hue: 355, notify: false },
+  { id: 's12', name: 'Le Soleil', plat: 'youtube', handle: '@lesoleil', lang: 'fr', live: true, viewers: 3350, title: 'Speedrun Mario 64 en direct', cat: 'Super Mario 64', hue: 38, notify: false },
+  { id: 's7', name: 'OldSchoolAna', plat: 'twitch', lang: 'pt', live: false, lastDays: 1, hue: 100, notify: true },
+  { id: 's8', name: 'Bruno Bits', handle: '@brunobits', plat: 'youtube', lang: 'pt', live: false, lastDays: 5, hue: 240, notify: true },
+  { id: 's9', name: 'kaizo_ken', plat: 'twitch', lang: 'en', live: false, lastDays: 2, hue: 0, notify: false },
+  { id: 's10', name: 'marlo', plat: 'kick', lang: 'es', live: false, lastDays: 12, hue: 60, notify: false }
+];
+const IMPORTS = {
+  twitch: ['arcadia_rei', 'zeroping', 'bea.plays', 'fofoquinha_tv', 'tiltproof'],
+  youtube: ['@labdoleo', '@retrocasa', '@marinaexplica', '@cafecomcodigo']
+};
+const SAMPLES = ['twitch.tv/lunavolt', 'youtube.com/@cafecomcodigo', 'kick.com/trovao'];
+const fmt = n => n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n);
+const hueOf = str => { let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+const detect = q => {
+  let m = q.match(/twitch\.tv\/([\w.-]+)/i); if (m) return { plat: 'twitch', name: m[1] };
+  m = q.match(/youtube\.com\/(@[\w.-]+)/i) || q.match(/youtu\.be\/(@?[\w.-]+)/i); if (m) return { plat: 'youtube', name: m[1] };
+  m = q.match(/kick\.com\/([\w.-]+)/i); if (m) return { plat: 'kick', name: m[1] };
+  return null;
+};
+const TITLES = { detail: 'Streamer', radar: 'Ao vivo', add: 'Adicionar', import: 'Importar seguidos', settings: 'Ajustes', languages: 'Idiomas', notifications: 'Notificações', skins: 'Skin' };
+const WEB_SUB = { radar: 'Quem dos seus streamers está no ar agora.', add: 'Cole o link do canal ou busque pelo nome.', import: 'Traga quem você já segue.', settings: 'Conta e preferências.', languages: 'Quais línguas aparecem em Ao vivo.', notifications: 'Escolha de quem receber aviso.', skins: 'A carcaça do seu radar.' };
+
+class Component extends DCLogic {
+  state = { screen: null, prev: 'radar', skin: null, langs: [LOCAL, ...(LOCAL === 'en' ? [] : ['en'])], langOpen: false, detailId: null, confirmRm: false, netDown: false, streams: DATA, offOpen: false, account: null, q: '', searchPlat: 'twitch', addLang: LOCAL, toast: null, push: null, opening: null, conn: { twitch: 0, youtube: 0 }, picks: {}, notifyAll: true };
+  t = {};
+  later(k, fn, ms) { clearTimeout(this.t[k]); this.t[k] = setTimeout(fn, ms); }
+  componentWillUnmount() { Object.values(this.t).forEach(clearTimeout); }
+  cur() { const st = this.props.start; return this.state.screen ?? ({ empty: 'radar', nonet: 'radar', badlink: 'add' }[st] || st || 'radar'); }
+  componentDidMount() { const st = this.props.start; if (st === 'empty') this.setState({ streams: [] }); if (st === 'nonet') this.setState({ netDown: true }); if (st === 'badlink') this.setState({ q: 'https://instagram.com/luminara' }); if (st === 'detail') this.setState({ detailId: 's7' }); }
+  openDetail = id => this.setState({ screen: 'detail', prev: this.cur(), detailId: id, confirmRm: false });
+  go = k => this.setState({ screen: k, prev: this.cur() });
+  toast = msg => { this.setState({ toast: msg }); this.later('toast', () => this.setState({ toast: null }), 2200); };
+  sorted() {
+    const L = this.state.langs;
+    return this.state.streams.filter(x => x.live && L.includes(x.lang)).sort((a, b) => b.viewers - a.viewers);
+  }
+  firePush = () => {
+    const top = this.sorted().find(x => x.notify) || this.sorted()[0];
+    if (!top) return;
+    this.setState({ push: top.id });
+    this.later('push', () => this.setState({ push: null }), 5200);
+  };
+  open = st => { this.setState({ opening: st.id, push: null }); this.later('open', () => this.setState({ opening: null }), 1900); };
+  finish = acc => { this.setState({ account: acc, screen: 'radar', prev: 'radar' }); this.later('p0', this.firePush, 2200); };
+  toggleNotify = id => this.setState(s => ({ streams: s.streams.map(x => x.id === id ? { ...x, notify: !x.notify } : x) }));
+  has = name => this.state.streams.some(x => x.name.toLowerCase() === name.toLowerCase());
+  addStreamer = (name, plat, silent) => {
+    if (this.has(name)) return;
+    const st = { id: 'n' + Math.random().toString(36).slice(2, 8), name, plat, lang: this.state.addLang, live: false, lastDays: null, hue: hueOf(name), notify: true, fresh: true };
+    this.setState(s => ({ streams: [...s.streams, st], q: silent ? s.q : '', offOpen: true }));
+    if (!silent) this.toast(name + ' adicionado · ' + PLAT[plat].label);
+  };
+  moveLang = (i, d) => this.setState(s => { const L = [...s.langs]; const j = i + d; if (j < 0 || j >= L.length) return null; [L[i], L[j]] = [L[j], L[i]]; return { langs: L }; });
+
+  deco(st, s) {
+    const p = PLAT[st.plat];
+    const on = st.notify && this.state.notifyAll;
+    return {
+      ...st, pLabel: p.label, pLetter: p.letter, pColor: p.color, pInk: p.ink, pApp: p.app,
+      langCode: st.lang.toUpperCase(), viewersTxt: st.live ? fmt(st.viewers) : '',
+      initial: st.name.replace('@', '').charAt(0).toUpperCase(),
+      thumbBg: `repeating-linear-gradient(135deg,hsl(${st.hue} 38% 34%) 0 9px,hsl(${st.hue} 38% 28%) 9px 18px)`,
+      avatarBg: `hsl(${st.hue} 45% 42%)`,
+      offTxt: st.lastDays == null ? 'verificando status…' : st.lastDays === 1 ? 'ao vivo há 1 dia' : `ao vivo há ${st.lastDays} dias`,
+      open: () => this.open(st), toggleNotify: () => this.toggleNotify(st.id), openDetail: () => this.openDetail(st.id), stopToggle: e => { e.stopPropagation(); this.toggleNotify(st.id); },
+      bellTxt: st.notify ? 'Aviso ligado' : 'Avisar', bellBg: st.notify ? s.accent : 'transparent', bellInk: st.notify ? s.accentInk : s.muted,
+      swBg: on ? s.swOn : s.swOff, swX: on ? '22px' : '3px'
+    };
+  }
+
+  renderVals() {
+    const P = this.props, S = this.state;
+    const platform = P.platform ?? 'ios';
+    const isWeb = platform === 'web', isMobile = !isWeb, isIOS = platform === 'ios';
+    const screen = this.cur();
+    const skinKey = S.skin ?? P.skin ?? 'prata';
+    const s = SKINS[skinKey] || SKINS.prata;
+    const layout = P.layout ?? 'destaque';
+    const live = this.sorted().map(x => this.deco(x, s));
+    const offline = S.streams.filter(x => !x.live).sort((a, b) => (a.lastDays ?? -1) - (b.lastDays ?? -1)).map(x => this.deco(x, s));
+    const all = [...this.state.streams.filter(x => x.live).sort((a, b) => b.viewers - a.viewers).map(x => this.deco(x, s)), ...offline];
+    const tabKey = { detail: S.prev === 'notifications' ? 'settings' : 'radar', radar: 'radar', add: 'add', import: S.prev === 'add' ? 'add' : 'settings' }[screen] || 'settings';
+    const bulb = 'inset 0 2px 1px rgba(255,255,255,.8),inset 0 -3px 5px rgba(0,0,0,.25),0 2px 4px rgba(0,0,0,.2)';
+    const pressed = 'inset 0 2px 5px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.6)';
+    const tabs = [['radar', 'Ao vivo', '◉'], ['add', 'Adicionar', '+'], ['settings', 'Ajustes', '≡']].map(([k, label, glyph]) => {
+      const a = tabKey === k;
+      return { label, glyph, go: () => this.go(k), bg: a ? s.btnOn : s.btn, ink: a ? s.btnOnInk : s.btnInk, shadow: a ? pressed : bulb, w: isIOS ? '40px' : (a ? '64px' : '40px') };
+    });
+    const webNav = [['radar', 'Ao vivo'], ['add', 'Adicionar'], ['import', 'Importar seguidos'], ['languages', 'Idiomas'], ['notifications', 'Notificações'], ['skins', 'Skin']].map(([k, label]) => {
+      const a = screen === k;
+      return { label, go: () => this.go(k), bg: a ? 'rgba(0,0,0,.14)' : 'transparent', shadow: a ? 'inset 0 1px 3px rgba(0,0,0,.3)' : 'none', dot: a ? s.btnOn : s.btn };
+    });
+
+    // add
+    const q = S.q; const det0 = detect(q); const qt = q.trim();
+    const mkAdd = (name, plat) => { const exists = this.has(name); return { btnTxt: exists ? 'Já está na lista' : 'Adicionar', btnBg: exists ? s.field : s.accent, btnInk: exists ? s.muted : s.accentInk, add: () => this.addStreamer(name, plat) }; };
+    const det = det0 ? { ...det0, pLabel: PLAT[det0.plat].label, pLetter: PLAT[det0.plat].letter, pColor: PLAT[det0.plat].color, pInk: PLAT[det0.plat].ink, pPrep: PLAT[det0.plat].prep, initial: det0.name.replace('@', '').charAt(0).toUpperCase(), avatarBg: `hsl(${hueOf(det0.name)} 45% 42%)`, sub: PLAT[det0.plat].label + ' · ' + (det0.plat === 'youtube' ? '84 mil inscritos' : '12 mil seguidores'), ...mkAdd(det0.name, det0.plat) } : {};
+    const sp = S.searchPlat;
+    const base = qt.replace(/^@/, '').replace(/\s+/g, '');
+    const results = (!det0 && qt) ? [base, base + '_tv', base + 'oficial'].map((n, i) => {
+      const name = sp === 'youtube' ? '@' + n : n;
+      return { name, initial: n.charAt(0).toUpperCase(), avatarBg: `hsl(${hueOf(name)} 45% 42%)`, sub: PLAT[sp].label + ' · ' + ['48 mil', '3,1 mil', '870'][i] + (sp === 'youtube' ? ' inscritos' : ' seguidores'), ...mkAdd(name, sp) };
+    }) : [];
+    const platTabs = Object.keys(PLAT).map(k => ({ label: PLAT[k].label, pick: () => this.setState({ searchPlat: k }), bg: sp === k ? s.card : 'transparent', ink: sp === k ? s.ink : s.frameInk, shadow: sp === k ? '0 1px 3px rgba(0,0,0,.2)' : 'none' }));
+    const addLangOpts = LANG_ORDER.slice(0, 4).map(k => ({ name: LANGS[k], pick: () => this.setState({ addLang: k }), bg: S.addLang === k ? s.accent : s.field, ink: S.addLang === k ? s.accentInk : s.ink, shadow: S.addLang === k ? 'none' : '0 0 0 1px ' + s.line }));
+
+    // import
+    const importCards = ['twitch', 'youtube'].map(k => {
+      const c = S.conn[k];
+      const list = IMPORTS[k].map(n => {
+        const exists = this.has(n); const on = !exists && S.picks[n] !== false;
+        return { name: n, note: exists ? 'já na lista' : '', mark: exists || on ? '✓' : '', boxBg: exists ? s.line : on ? s.accent : 'transparent', boxRing: on ? s.accent : s.line, toggle: () => !exists && this.setState(st => ({ picks: { ...st.picks, [n]: st.picks[n] === false } })) };
+      });
+      const n = list.filter(x => x.mark && !x.note).length;
+      return {
+        pColor: PLAT[k].color, pInk: PLAT[k].ink, pLetter: PLAT[k].letter,
+        title: k === 'twitch' ? 'Twitch' : 'YouTube',
+        sub: c === 0 ? (k === 'twitch' ? 'Canais que você segue' : 'Suas inscrições') : c === 1 ? `${IMPORTS[k].length} canais encontrados` : 'Importado',
+        showConnect: c !== 1, connectTxt: c === 2 ? 'Rever' : k === 'twitch' ? 'Entrar com Twitch' : 'Entrar com Google',
+        connect: () => this.setState(st => ({ conn: { ...st.conn, [k]: 1 } })),
+        showList: c === 1, list, importTxt: n ? `Importar ${n} ${n === 1 ? 'canal' : 'canais'}` : 'Nada selecionado',
+        doImport: () => { const names = IMPORTS[k].filter(x => !this.has(x) && S.picks[x] !== false); names.forEach(x => this.addStreamer(x, k, true)); this.setState(st => ({ conn: { ...st.conn, [k]: 2 } })); if (names.length) this.toast(`${names.length} canais importados da ${PLAT[k].label}`); }
+      };
+    });
+
+    // account
+    const acc = S.account;
+    const accountTitle = acc === 'twitch' ? 'Conectado com Twitch' : acc === 'google' ? 'Conectado com Google' : 'Sem conta';
+    const accountSub = acc ? 'Lista sincronizada entre aparelhos' : 'Lista salva só neste aparelho';
+
+    // languages
+    const liveAllN = k => S.streams.filter(x => x.live && x.lang === k).length;
+    const langItems = LANG_ORDER.map(k => {
+      const on = S.langs.includes(k); const n = liveAllN(k);
+      return { name: LANGS[k], hasTag: false, tag: 'SUA LÍNGUA', count: n ? `${n} ao vivo` : '', short: n ? String(n) : '', mark: on ? '✓' : '', boxBg: on ? s.accent : 'transparent', boxRing: on ? s.accent : s.muted, rowBg: on ? s.field : 'transparent',
+        toggle: () => this.setState(st => { if (st.langs.includes(k)) { if (st.langs.length === 1) { this.toast('Mantenha pelo menos uma língua marcada'); return null; } return { langs: st.langs.filter(x => x !== k) }; } return { langs: [...st.langs, k] }; }) };
+    });
+    const langCodes = LANG_ORDER.filter(k => S.langs.includes(k)).map(x => x.toUpperCase());
+    const langSummary = !langCodes.length ? 'Nenhuma' : langCodes.length === LANG_ORDER.length ? 'Todas' : langCodes.length > 3 ? langCodes.slice(0, 2).join(', ') + ' +' + (langCodes.length - 2) : langCodes.join(', ');
+
+    const shown = all.filter(x => S.langs.includes(x.lang));
+    const notifOn = shown.filter(x => x.notify).length;
+    const settingsItems = [
+      ['Idiomas', langSummary, 'languages'],
+      ['Notificações', S.notifyAll ? `${notifOn} de ${shown.length}` : 'Desligadas', 'notifications'],
+      ['Skin', s.name, 'skins'],
+      ['Importar seguidos', 'Twitch · YouTube', 'import']
+    ].map(([label, value, k]) => ({ label, value, go: () => this.go(k) }));
+
+    const skinTiles = Object.keys(SKINS).map(k => { const x = SKINS[k]; const sel = k === skinKey; return { ...x, selected: sel, pick: () => this.setState({ skin: k }), ring: sel ? `0 0 0 3px ${s.accent},0 6px 16px rgba(0,0,0,.18)` : `0 0 0 1px ${s.line},0 3px 10px rgba(0,0,0,.12)` }; });
+
+    const badLink = !det0 && !!qt && /(https?:|www\.|\.[a-z]{2,}\/)/i.test(qt);
+    const dRaw = all.find(x => x.id === (S.detailId || 's7')) || all[0] || {};
+    const dOn = dRaw.notify && S.notifyAll;
+    const d = { ...dRaw, avatarFilter: dRaw.live ? 'none' : 'grayscale(.5)', handleTxt: (dRaw.handle || (dRaw.plat === 'youtube' ? dRaw.name : '')) ? (dRaw.handle || dRaw.name) : (dRaw.plat ? (dRaw.plat === 'twitch' ? 'twitch.tv/' : 'kick.com/') + dRaw.name : ''),
+      lcdTxt: dRaw.live ? 'AO VIVO ' + dRaw.viewersTxt : 'OFFLINE', lcdInk: dRaw.live ? s.lcdFg : '#8a9199', lcdShadow: dRaw.live ? s.lcdGlow : 'none',
+      statusSub: dRaw.live ? 'viewers agora · ' + (dRaw.cat || '') : dRaw.offTxt ? 'Última live: ' + dRaw.offTxt.replace('ao vivo ', '') : '',
+      openTxt: dRaw.live ? 'Assistir no ' + dRaw.pApp : 'Abrir canal no ' + dRaw.pApp,
+      notifySub: !S.notifyAll ? 'Avisos gerais desligados em Notificações' : dRaw.notify ? 'Ligado' : 'Desligado',
+      swBg: dOn ? s.swOn : s.swOff, swX2: dOn ? '25px' : '3px' };
+    const dLangs = LANG_ORDER.slice(0, 6).map(k => ({ name: LANGS[k], pick: () => this.setState(st => ({ streams: st.streams.map(x => x.id === dRaw.id ? { ...x, lang: k } : x) })), bg: dRaw.lang === k ? s.accent : s.field, ink: dRaw.lang === k ? s.accentInk : s.ink, shadow: dRaw.lang === k ? 'none' : '0 0 0 1px ' + s.line }));
+    const pushSt = S.push ? all.find(x => x.id === S.push) : null;
+    const openSt = S.opening ? all.find(x => x.id === S.opening) : null;
+    const hero = live[0] || {};
+
+    return {
+      s, isWeb, isMobile, isOnboarding: screen === 'onboarding', isApp: screen !== 'onboarding',
+      statusH: isIOS ? '50px' : '32px', statusPad: isIOS ? '14px 30px 0 34px' : '0 20px', statusFont: isIOS ? '15px' : '13px',
+      shellDir: isWeb ? 'row' : 'column',
+      titleUpper: (screen === 'detail' ? (dRaw.name || 'Streamer') : TITLES[screen])?.toUpperCase(), titleSize: isIOS ? '17px' : '16px', webSub: WEB_SUB[screen],
+      showBack: ['import', 'languages', 'notifications', 'skins', 'detail'].includes(screen),
+      back: () => this.go(screen === 'detail' ? (S.prev === 'notifications' ? 'notifications' : 'radar') : screen === 'import' && S.prev === 'add' ? 'add' : 'settings'),
+      liveCount: live.length, liveCountTxt: String(live.length).padStart(2, '0'),
+      contentPad: isWeb ? '32px 36px 48px' : '16px 14px 24px', contentMax: isWeb ? '1080px' : 'none',
+      thumbW: isWeb ? '148px' : '96px', cardCols: isWeb ? 'repeat(auto-fill,minmax(260px,1fr))' : '1fr',
+      waysCols: isWeb ? 'repeat(3,minmax(0,1fr))' : '1fr', skinCols: isWeb ? 'repeat(3,minmax(0,1fr))' : '1fr',
+      tabs, webNav, homeH: isIOS ? '26px' : '18px', homeW: isIOS ? '134px' : '96px',
+      goAdd: () => this.go('add'), goImport: () => this.go('import'), goLanguages: () => this.go('languages'), goSettings: () => this.go('settings'), goOnboarding: () => this.go('onboarding'),
+      loginTwitch: () => this.finish('twitch'), loginGoogle: () => this.finish('google'), loginGuest: () => this.finish(null),
+      isRadar: screen === 'radar', isAdd: screen === 'add', isImport: screen === 'import', isSettings: screen === 'settings', isLanguages: screen === 'languages', isNotifications: screen === 'notifications', isSkins: screen === 'skins',
+      live, offline, offCount: offline.length, offOpen: S.offOpen, offArrow: S.offOpen ? '▾' : '▸', toggleOff: () => this.setState(st => ({ offOpen: !st.offOpen })),
+      sortHint: langSummary, langOpen: S.langOpen, langArrow: S.langOpen ? '▴' : '▾', langBtnBg: S.langOpen ? s.field : s.card, toggleLangPanel: () => this.setState(st => ({ langOpen: !st.langOpen })),
+      langMine: () => this.setState({ langs: [LOCAL, ...(LOCAL === 'en' ? [] : ['en'])] }), langAll: () => this.setState({ langs: [...LANG_ORDER] }),
+      panelCols: isWeb ? 'repeat(4,minmax(0,1fr))' : 'repeat(2,minmax(0,1fr))', langCols: isWeb ? 'repeat(auto-fill,minmax(220px,1fr))' : '1fr', noLive: live.length === 0,
+      showHero: layout === 'destaque' && live.length > 0, hero, showRows: layout !== 'telas', rowList: layout === 'destaque' ? live.slice(1) : live, showCards: layout === 'telas',
+      q, hasQ: !!q, onQ: e => this.setState({ q: e.target.value }), clearQ: () => this.setState({ q: '' }),
+      addEmpty: !qt, detected: !!det0, det, badLink, searching: !det0 && !!qt && !badLink, results, platTabs, ytHint: sp === 'youtube' && !qt.startsWith('@'), addLangOpts,
+      samples: SAMPLES.map(u => ({ url: u, fill: () => this.setState({ q: 'https://' + u }) })),
+      importCards,
+      accountTitle, accountSub, accountInitial: acc ? (acc === 'twitch' ? 'T' : 'G') : '?', accountAvatar: acc === 'twitch' ? '#7c3aed' : acc === 'google' ? '#2f63d6' : '#8a8f98',
+      accountBtn: acc ? 'Sair' : 'Entrar', accountAction: () => acc ? this.setState({ account: null }) : this.go('onboarding'),
+      settingsItems, langItems,
+      isGuest: !acc, notifySummary: S.notifyAll ? `${notifOn} de ${shown.length} streamers com aviso` : 'Todos os avisos desligados',
+      allSw: { bg: S.notifyAll ? s.swOn : s.swOff, x: S.notifyAll ? '25px' : '3px' }, toggleAll: () => this.setState(st => ({ notifyAll: !st.notifyAll })), listOp: S.notifyAll ? 1 : .45,
+      notifyList: shown, firePush: this.firePush, skinTiles,
+      isDetail: screen === 'detail', d, dLangs, showRm: !S.confirmRm, confirmRm: S.confirmRm,
+      askRm: () => this.setState({ confirmRm: true }), cancelRm: () => this.setState({ confirmRm: false }),
+      doRm: () => { const nm = dRaw.name; this.setState(st => ({ streams: st.streams.filter(x => x.id !== dRaw.id), confirmRm: false, screen: st.prev === 'notifications' ? 'notifications' : 'radar' })); this.toast(nm + ' removido da lista'); },
+      radarEmpty: screen === 'radar' && S.streams.length === 0, radarFull: screen === 'radar' && S.streams.length > 0, netDown: S.netDown, retryNet: () => { this.setState({ netDown: false }); this.toast('Conectado. Status atualizado.'); },
+      hasPush: !!pushSt, showStatusIcon: platform === 'android' && !!S.push, push: pushSt || {},
+      pushTop: isWeb ? 'auto' : (isIOS ? '56px' : '38px'), pushSide: isWeb ? '24px' : '10px', pushLeft: isWeb ? 'auto' : '10px', pushW: isWeb ? '360px' : 'auto',
+      pushAnim: isWeb ? 'msRise .35s cubic-bezier(.2,.9,.3,1.2)' : 'msDrop .4s cubic-bezier(.2,.9,.3,1.2)',
+      pushBg: isIOS ? 'rgba(250,250,252,.86)' : '#f4f5f8', pushRadius: isIOS ? '22px' : isWeb ? '14px' : '18px',
+      hasOpening: !!openSt, openingTxt: openSt ? (openSt.live ? `Abrindo ${openSt.name} no ${openSt.pApp}…` : `Abrindo perfil de ${openSt.name} no ${openSt.pApp}…`) : '', opening: openSt || {}, hasToast: !!S.toast && !openSt, toast: S.toast,
+      toastBottom: isWeb ? '28px' : (isIOS ? '112px' : '100px')
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Multistreams",
+    "slug": "multistreams",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logo-round.png",
+    "scheme": "multistreams",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.multistreams.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.multistreams.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#eceef1",
+        "foregroundImage": "./assets/images/logo-round.png",
+        "monochromeImage": "./assets/images/icon-mono-white.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/logo-round.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-localization",
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#eceef1",
+          "image": "./assets/images/logo-round.png",
+          "imageWidth": 128
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon-mono-white.png",
+          "color": "#2f63d6",
+          "defaultChannel": "live"
+        }
+      ]
+    ],
+    "experiments": {
+      "reactCompiler": true
+    }
+  }
+}

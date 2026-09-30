@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Michroma&display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:#dfe1e5}a{color:#2f63d6}a:hover{color:#1d45a0}</style>
+</helmet>
+<section style="padding:72px 72px 0;display:flex;flex-direction:column;gap:28px;font-family:'Chakra Petch',sans-serif;color:#16181d;background:#dfe1e5;min-width:max-content">
+  <div style="display:flex;flex-direction:column;gap:10px;max-width:760px">
+    <div style="font-family:Michroma,sans-serif;font-size:34px;letter-spacing:.06em">RODADA 2 · DETALHE E ESTADOS VAZIOS</div>
+    <div style="font-size:17px;line-height:1.5;color:#4a4f58">Layout <a href="#1c">1c</a> aplicado em todas as telas. Toque num streamer em Notificações para abrir o detalhe. Na lista Offline, o toque abre o perfil na plataforma.</div>
+  </div>
+  <div style="display:flex;gap:64px;flex-wrap:wrap;align-items:flex-start">
+      <div id="2a" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">2a</div><div style="font-size:16px;font-weight:600">Detalhe do streamer</div></div>
+        <div style="width:414px;height:868px;border-radius:62px;background:#111214;padding:12px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25)">
+          <div style="width:100%;height:100%;border-radius:50px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="ios" layout="destaque" skin="prata" start="detail" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+      <div id="2b" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">2b</div><div style="font-size:16px;font-weight:600">Vazio: nenhum streamer</div></div>
+        <div style="width:414px;height:868px;border-radius:62px;background:#111214;padding:12px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25)">
+          <div style="width:100%;height:100%;border-radius:50px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="ios" layout="destaque" skin="azul" start="empty" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+      <div id="2c" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">2c</div><div style="font-size:16px;font-weight:600">Sem conexão</div></div>
+        <div style="width:414px;height:868px;border-radius:62px;background:#111214;padding:12px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25)">
+          <div style="width:100%;height:100%;border-radius:50px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="ios" layout="destaque" skin="preto" start="nonet" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+      <div id="2d" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">2d</div><div style="font-size:16px;font-weight:600">Link não reconhecido</div></div>
+        <div style="width:414px;height:868px;border-radius:62px;background:#111214;padding:12px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25)">
+          <div style="width:100%;height:100%;border-radius:50px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="ios" layout="destaque" skin="prata" start="badlink" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+  </div>
+</section>
+<section style="padding:72px;display:flex;flex-direction:column;gap:88px;font-family:'Chakra Petch',sans-serif;color:#16181d;background:#dfe1e5;min-width:max-content">
+  <div style="display:flex;flex-direction:column;gap:10px;max-width:760px">
+    <div style="font-family:Michroma,sans-serif;font-size:34px;letter-spacing:.06em">MULTISTREAMS · RODADA 1</div>
+    <div style="font-size:17px;line-height:1.5;color:#4a4f58">Todas as telas são clicáveis: toque numa live, abra o Offline, adicione por link, importe seguidos, filtre por língua, troque a skin. Os aparelhos de <a href="#1d">1d</a>–<a href="#1f">1f</a> começam no onboarding e disparam um push de exemplo depois do login.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.16em;color:#5a606b">LAYOUTS DA LISTA · iOS · CROMADO PRATA</div>
+      <div style="font-size:15px;color:#4a4f58">Três formas de ler a lista ao vivo.</div>
+    </div>
+    <div style="display:flex;gap:64px;flex-wrap:wrap;align-items:flex-start">
+      <div id="1a" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">1a</div><div style="font-size:16px;font-weight:600">Lista: thumb pequena + LCD, a mais densa</div></div>
+        <div style="width:414px;height:868px;border-radius:62px;background:#111214;padding:12px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25);position:relative">
+          <div style="width:100%;height:100%;border-radius:50px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="ios" layout="lista" skin="prata" start="radar" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+      <div id="1b" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">1b</div><div style="font-size:16px;font-weight:600">Telas: cada live é uma tela na moldura</div></div>
+        <div style="width:414px;height:868px;border-radius:62px;background:#111214;padding:12px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25);position:relative">
+          <div style="width:100%;height:100%;border-radius:50px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="ios" layout="telas" skin="prata" start="radar" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+      <div id="1c" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">1c</div><div style="font-size:16px;font-weight:600">Destaque: o mais assistido em tela cheia, o resto em lista · ESCOLHIDO</div></div>
+        <div style="width:414px;height:868px;border-radius:62px;background:#111214;padding:12px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25);position:relative">
+          <div style="width:100%;height:100%;border-radius:50px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="ios" layout="destaque" skin="prata" start="radar" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.16em;color:#5a606b">PLATAFORMAS · FLUXO COMPLETO A PARTIR DO ONBOARDING</div>
+      <div style="font-size:15px;color:#4a4f58">Mesmo app nas três frentes. No web, a navegação cromada vira barra lateral.</div>
+    </div>
+    <div style="display:flex;gap:64px;flex-wrap:wrap;align-items:flex-start">
+      <div id="1d" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">1d</div><div style="font-size:16px;font-weight:600">iOS · Azul metálico</div></div>
+        <div style="width:414px;height:868px;border-radius:62px;background:#111214;padding:12px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25)">
+          <div style="width:100%;height:100%;border-radius:50px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="ios" layout="destaque" skin="azul" start="onboarding" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+      <div id="1e" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">1e</div><div style="font-size:16px;font-weight:600">Android · Preto fosco</div></div>
+        <div style="width:432px;height:916px;border-radius:44px;background:#1a1b1e;padding:10px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25)">
+          <div style="width:100%;height:100%;border-radius:34px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="android" layout="destaque" skin="preto" start="onboarding" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:9px;left:50%;transform:translateX(-50%);width:14px;height:14px;border-radius:50%;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+      <div id="1f" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">1f</div><div style="font-size:16px;font-weight:600">Web · Cromado prata</div></div>
+        <div style="width:1280px;border-radius:14px;overflow:hidden;background:#f3f4f6;box-shadow:0 30px 60px rgba(0,0,0,.22),0 0 0 1px rgba(0,0,0,.12)">
+          <div style="height:40px;display:flex;align-items:center;gap:14px;padding:0 14px;background:#e6e7ea;border-bottom:1px solid #cfd1d5">
+            <div style="display:flex;gap:7px"><div style="width:12px;height:12px;border-radius:50%;background:#c9cbd0"></div><div style="width:12px;height:12px;border-radius:50%;background:#c9cbd0"></div><div style="width:12px;height:12px;border-radius:50%;background:#c9cbd0"></div></div>
+            <div style="flex:1;max-width:420px;margin:0 auto;height:26px;border-radius:7px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:#5a606b">multistreams.app</div>
+          </div>
+          <div style="height:800px;position:relative">
+            <dc-import name="MultistreamsApp" platform="web" layout="destaque" skin="prata" start="onboarding" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.16em;color:#5a606b">SKINS · TELA DE ESCOLHA</div>
+      <div style="font-size:15px;color:#4a4f58">Toque numa skin para ver o app inteiro mudar. Volte ao Ao vivo pela barra de baixo.</div>
+    </div>
+    <div style="display:flex;gap:64px;flex-wrap:wrap;align-items:flex-start">
+      <div id="1g" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">1g</div><div style="font-size:16px;font-weight:600">Cromado prata</div></div>
+        <div style="width:414px;height:868px;border-radius:62px;background:#111214;padding:12px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25)">
+          <div style="width:100%;height:100%;border-radius:50px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="ios" layout="destaque" skin="prata" start="skins" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+      <div id="1h" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">1h</div><div style="font-size:16px;font-weight:600">Azul metálico · Notificações</div></div>
+        <div style="width:414px;height:868px;border-radius:62px;background:#111214;padding:12px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25)">
+          <div style="width:100%;height:100%;border-radius:50px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="ios" layout="destaque" skin="azul" start="notifications" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+      <div id="1i" style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px"><div style="background:#16181d;color:#fff;font-weight:700;font-size:14px;padding:4px 10px;border-radius:6px">1i</div><div style="font-size:16px;font-weight:600">Preto fosco · Adicionar</div></div>
+        <div style="width:432px;height:916px;border-radius:44px;background:#1a1b1e;padding:10px;box-sizing:border-box;box-shadow:0 30px 60px rgba(0,0,0,.25)">
+          <div style="width:100%;height:100%;border-radius:34px;overflow:hidden;position:relative">
+            <dc-import name="MultistreamsApp" platform="android" layout="destaque" skin="preto" start="add" style="width:100%;height:100%" hint-size="100%,100%"></dc-import>
+            <div style="position:absolute;top:9px;left:50%;transform:translateX(-50%);width:14px;height:14px;border-radius:50%;background:#000;z-index:30;pointer-events:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+</body>
+</html>
