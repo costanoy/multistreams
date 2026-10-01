@@ -36,10 +36,16 @@ export class ApiError extends Error {
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   if (!BASE) throw new ApiError('no_api');
   let res: Response;
+  // no Android, um endereço que não responde (DNS ou servidor fora do ar) pode deixar a chamada
+  // pendurada para sempre: desiste em 25 s para a tela mostrar "Sem conexão"
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), 25000);
   try {
-    res = await fetch(BASE + path, init);
+    res = await fetch(BASE + path, { ...init, signal: abort.signal });
   } catch {
     throw new ApiError('network');
+  } finally {
+    clearTimeout(timer);
   }
   if (!res.ok) throw new ApiError((await res.json().catch(() => null))?.error ?? 'upstream_error');
   return res.json();
