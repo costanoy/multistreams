@@ -2,7 +2,9 @@ import { Image, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { signIn } from '@/account';
+import { DownloadApk } from '@/DownloadApk';
 import { go } from '@/open';
+import { play } from '@/sounds';
 import { Provider, useStore } from '@/store';
 import { grad } from '@/theme';
 import { Btn, Lcd, LcdText, T, useSkin } from '@/ui';
@@ -11,15 +13,14 @@ export default function Onboarding() {
   const s = useSkin();
   const insets = useSafeAreaInsets();
 
-  const login = async (provider: Provider) => {
-    if (await signIn(provider, '/')) {
-      useStore.setState({ onboarded: true });
-      go('/');
-    }
-  };
-  const guest = () => {
+  // a abertura toca uma vez, quando a pessoa entra no app pela primeira vez
+  const enter = () => {
+    play('startup');
     useStore.setState({ onboarded: true });
     go('/');
+  };
+  const login = async (provider: Provider) => {
+    if (await signIn(provider, '/')) enter();
   };
 
   return (
@@ -43,7 +44,8 @@ export default function Onboarding() {
         <View style={{ width: '100%', gap: 10 }}>
           <Btn h={50} label="Entrar com Twitch" color="#7c3aed" onPress={() => login('twitch')} />
           <Btn h={50} label="Entrar com Google" color="#ffffff" ink="#1a1c21" onPress={() => login('google')} />
-          <Btn h={50} label="Continuar sem conta" onPress={guest} />
+          <Btn h={50} label="Continuar sem conta" onPress={enter} />
+          <DownloadApk variant="onboarding" />
         </View>
         <T s={12.5} lh={1.45} c={s.frameMuted} center>Sem conta, a lista fica salva neste aparelho. Com conta: sincronização, push e importação de quem você já segue.</T>
       </View>

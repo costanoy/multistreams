@@ -9,13 +9,48 @@ export const PLAT: Record<Plat, { label: string; letter: string; color: string; 
 };
 export const PLATS = Object.keys(PLAT) as Plat[];
 
-export const LANGS: Record<string, string> = { pt: 'Português', en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', it: 'Italiano', ja: '日本語', ko: '한국어' };
+/** código ISO → [nome na própria língua, nome em português] */
+const LANG_TABLE: [string, string, string][] = [
+  ['pt', 'Português', 'Português'], ['en', 'English', 'Inglês'], ['es', 'Español', 'Espanhol'], ['fr', 'Français', 'Francês'],
+  ['de', 'Deutsch', 'Alemão'], ['it', 'Italiano', 'Italiano'], ['ja', '日本語', 'Japonês'], ['ko', '한국어', 'Coreano'],
+  ['zh', '中文', 'Chinês'], ['ru', 'Русский', 'Russo'], ['ar', 'العربية', 'Árabe'], ['hi', 'हिन्दी', 'Hindi'],
+  ['tr', 'Türkçe', 'Turco'], ['pl', 'Polski', 'Polonês'], ['nl', 'Nederlands', 'Holandês'], ['sv', 'Svenska', 'Sueco'],
+  ['no', 'Norsk', 'Norueguês'], ['da', 'Dansk', 'Dinamarquês'], ['fi', 'Suomi', 'Finlandês'], ['cs', 'Čeština', 'Tcheco'],
+  ['sk', 'Slovenčina', 'Eslovaco'], ['hu', 'Magyar', 'Húngaro'], ['ro', 'Română', 'Romeno'], ['bg', 'Български', 'Búlgaro'],
+  ['el', 'Ελληνικά', 'Grego'], ['uk', 'Українська', 'Ucraniano'], ['he', 'עברית', 'Hebraico'], ['th', 'ไทย', 'Tailandês'],
+  ['vi', 'Tiếng Việt', 'Vietnamita'], ['id', 'Bahasa Indonesia', 'Indonésio'], ['ms', 'Bahasa Melayu', 'Malaio'], ['tl', 'Filipino', 'Filipino'],
+  ['ca', 'Català', 'Catalão'], ['hr', 'Hrvatski', 'Croata'], ['sr', 'Српски', 'Sérvio'], ['sl', 'Slovenščina', 'Esloveno'],
+  ['lt', 'Lietuvių', 'Lituano'], ['lv', 'Latviešu', 'Letão'], ['et', 'Eesti', 'Estoniano'], ['fa', 'فارسی', 'Persa'],
+  ['bn', 'বাংলা', 'Bengali'], ['ta', 'தமிழ்', 'Tâmil'], ['te', 'తెలుగు', 'Télugo'], ['ur', 'اردو', 'Urdu'],
+  ['sw', 'Kiswahili', 'Suaíli'], ['af', 'Afrikaans', 'Africâner'], ['is', 'Íslenska', 'Islandês'], ['ka', 'ქართული', 'Georgiano'],
+  ['kk', 'Қазақ тілі', 'Cazaque'], ['az', 'Azərbaycan', 'Azerbaijano'],
+];
+export const LANGS: Record<string, string> = Object.fromEntries(LANG_TABLE.map(([k, n]) => [k, n]));
+const LANGS_PT: Record<string, string> = Object.fromEntries(LANG_TABLE.map(([k, , pt]) => [k, pt]));
 const device = (getLocales()[0]?.languageCode ?? 'pt').toLowerCase();
 /** Língua do aparelho (se suportada). */
 export const LOCAL = LANGS[device] ? device : 'pt';
 /** Língua local, inglês, depois as demais. */
 export const LANG_ORDER = [LOCAL, ...(LOCAL === 'en' ? [] : ['en']), ...Object.keys(LANGS).filter(k => k !== LOCAL && k !== 'en')];
-export const DEFAULT_LANGS = [LOCAL, ...(LOCAL === 'en' ? [] : ['en'])];
+/** Na primeira vez, só a língua do aparelho vem marcada. */
+export const DEFAULT_LANGS = [LOCAL];
+
+/** Mesma chave do worker: junta "Grand Theft Auto V (GTA)" e "Grand Theft Auto V". */
+export const catKey = (name: string) =>
+  name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/\(.*?\)/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+
+export const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+/** Busca de língua pelo nome nativo, pelo nome em português ou pelo código. */
+export const matchLang = (k: string, q: string) => {
+  const f = fold(q.trim());
+  return !f || fold(LANGS[k]).includes(f) || fold(LANGS_PT[k]).includes(f) || k === f;
+};
 
 export type SkinKey = 'prata' | 'azul' | 'preto';
 export interface Skin {

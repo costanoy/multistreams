@@ -1,7 +1,7 @@
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { browse } from './browse.js';
+import { browse, categories } from './browse.js';
 import { config, enabled } from './config.js';
 import * as kick from './kick.js';
 import * as registry from './registry.js';
@@ -35,12 +35,28 @@ app.get('/search', async c => {
   return c.json(await api[p].search(q));
 });
 
-/** Tudo que está ao vivo nas plataformas e línguas pedidas, por viewers. */
+/** Plataformas e línguas da query (?platforms=twitch,kick&langs=pt,en). */
+const filters = (c: { req: { query: (k: string) => string | undefined } }) => ({
+  platforms: [...new Set((c.req.query('platforms') ?? '').split(',').map(platformOf).filter((p): p is Platform => !!p))],
+  langs: [...new Set((c.req.query('langs') ?? '').split(','))].filter(l => /^[a-z]{2}$/.test(l)).slice(0, 60),
+});
+
+/** Tudo que está ao vivo nas plataformas, línguas e categorias (?cat=…, repetido) pedidas, por viewers. */
 app.get('/browse', async c => {
-  const platforms = (c.req.query('platforms') ?? '').split(',').map(platformOf).filter((p): p is Platform => !!p);
-  const langs = [...new Set((c.req.query('langs') ?? '').split(','))].filter(l => /^[a-z]{2}$/.test(l)).slice(0, 8);
+  const { platforms, langs } = filters(c);
   if (!platforms.length || !langs.length) return c.json({ error: 'bad_request' }, 400);
-  return c.json({ at: new Date().toISOString(), items: await browse([...new Set(platforms)], langs) });
+  const cats = (c.req.queries('cat') ?? []).map(x => x.slice(0, 100)).filter(Boolean).slice(0, 20);
+  const sort = c.req.query('sort') === 'asc' ? 'asc' : 'desc';
+  const offset = Math.max(0, Number(c.req.query('offset')) || 0);
+  const limit = Math.min(200, Math.max(1, Number(c.req.query('limit')) || 50));
+  return c.json({ at: new Date().toISOString(), ...(await browse(platforms, langs, cats, sort, offset, limit)) });
+});
+
+/** Categorias de quem está ao vivo, para o filtro (jogos, IRL, Just Chatting…). */
+app.get('/categories', async c => {
+  const { platforms, langs } = filters(c);
+  if (!platforms.length || !langs.length) return c.json({ error: 'bad_request' }, 400);
+  return c.json(await categories(platforms, langs));
 });
 
 app.post('/status', async c => {

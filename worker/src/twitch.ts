@@ -12,7 +12,7 @@ async function appToken(): Promise<string> {
   return token.value;
 }
 
-async function helix<T = any>(path: string, params: [string, string][] = [], init?: RequestInit, retry = true): Promise<T> {
+async function helix<T = any>(path: string, params: [string, string][] = [], init?: RequestInit, retry = 3): Promise<T> {
   const q = new URLSearchParams(params);
   try {
     return await getJson(`https://api.twitch.tv/helix/${path}?${q}`, {
@@ -22,7 +22,12 @@ async function helix<T = any>(path: string, params: [string, string][] = [], ini
   } catch (e) {
     if (retry && e instanceof HttpError && e.status === 401) {
       token = null;
-      return helix(path, params, init, false);
+      return helix(path, params, init, 0);
+    }
+    // limite de 800 chamadas/min: espera um pouco e tenta de novo
+    if (retry && e instanceof HttpError && e.status === 429) {
+      await new Promise(r => setTimeout(r, 3000));
+      return helix(path, params, init, retry - 1);
     }
     throw e;
   }
@@ -90,36 +95,36 @@ export async function lastLiveAt(id: string): Promise<string | null> {
   }
 }
 
-const avatars = new Map<string, string>();
+const MAX_PAGES = 1000;
 
-/** As 100 lives com mais viewers da Twitch em uma língua. */
-export async function topLive(lang: string): Promise<BrowseItem[]> {
-  const r = await helix('streams', [['first', '100'], ['language', lang]]);
-  const live = r.data.filter((s: any) => s.type === 'live');
-  const need = live.map((s: any) => s.user_id as string).filter((id: string) => !avatars.has(id));
-  if (need.length) {
-    if (avatars.size > 5000) avatars.clear();
-    try {
-      const u = await helix('users', need.map((id: string): [string, string] => ['id', id]));
-      for (const x of u.data) avatars.set(x.id, x.profile_image_url);
-    } catch {
-      // avatar é opcional
-    }
+/**
+ * Todas as lives da Twitch nas línguas pedidas, do mais assistido para o menos.
+ * Get Streams pagina de 100 em 100 (só em português são ~90 páginas), então cada
+ * página é entregue a `onPage` assim que chega.
+ */
+export async function crawlLive(langs: string[], onPage: (items: BrowseItem[]) => void): Promise<void> {
+  let cursor = '';
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const params: [string, string][] = [['first', '100'], ...langs.map((l): [string, string] => ['language', l])];
+    if (cursor) params.push(['after', cursor]);
+    const r = await helix('streams', params);
+    onPage(r.data.filter((s: any) => s.type === 'live').map((s: any): BrowseItem => ({
+      key: `twitch:${s.user_id}`,
+      platform: 'twitch',
+      channelId: s.user_id,
+      login: s.user_login,
+      name: s.user_name,
+      avatar: null,
+      viewers: s.viewer_count,
+      title: s.title,
+      cat: s.game_name || '',
+      thumb: s.thumbnail_url ? s.thumbnail_url.replace('{width}', '440').replace('{height}', '248') : null,
+      lang: langCode(s.language) ?? '',
+      url: `https://www.twitch.tv/${s.user_login}`,
+    })));
+    cursor = r.pagination?.cursor ?? '';
+    if (!cursor) return;
   }
-  return live.map((s: any): BrowseItem => ({
-    key: `twitch:${s.user_id}`,
-    platform: 'twitch',
-    channelId: s.user_id,
-    login: s.user_login,
-    name: s.user_name,
-    avatar: avatars.get(s.user_id) ?? null,
-    viewers: s.viewer_count,
-    title: s.title,
-    cat: s.game_name || '',
-    thumb: s.thumbnail_url ? s.thumbnail_url.replace('{width}', '640').replace('{height}', '360') : null,
-    lang,
-    url: `https://www.twitch.tv/${s.user_login}`,
-  }));
 }
 
 // ---- EventSub (opcional) ----

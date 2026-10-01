@@ -7,7 +7,7 @@ import { go } from '@/open';
 import { Screen } from '@/Shell';
 import { Provider, useStore } from '@/store';
 import { LOCAL, PLAT, Plat } from '@/theme';
-import { Avatar, Btn, Card, Check, T, useSkin } from '@/ui';
+import { Avatar, Btn, Card, Check, PlatLogo, T, useSkin } from '@/ui';
 
 const SOURCES: { plat: Plat; provider: Provider; idle: string; connect: string; load: (t: string) => Promise<Importable[]> }[] = [
   { plat: 'twitch', provider: 'twitch', idle: 'Canais que você segue', connect: 'Entrar com Twitch', load: twitchFollowed },
@@ -59,9 +59,7 @@ function Source({ src, from }: { src: (typeof SOURCES)[number]; from?: string })
   return (
     <Card style={{ padding: 14, gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: PLAT[src.plat].color, alignItems: 'center', justifyContent: 'center' }}>
-          <T s={16} w={700} c={PLAT[src.plat].ink}>{PLAT[src.plat].letter}</T>
-        </View>
+        <PlatLogo plat={src.plat} size={36} />
         <View style={{ flex: 1, gap: 2 }}>
           <T s={15} w={700}>{PLAT[src.plat].label}</T>
           <T s={12.5} c={s.muted}>{done ? 'Importado' : list ? `${list.length} ${list.length === 1 ? 'canal encontrado' : 'canais encontrados'}` : src.idle}</T>
@@ -98,9 +96,7 @@ export default function Import() {
         <T s={13.5} lh={1.45} c={s.muted}>Entre com sua conta para trazer quem você já segue. Você escolhe quem entra na lista.</T>
         {SOURCES.map(src => <Source key={src.plat} src={src} from={from} />)}
         <Card style={{ padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: PLAT.kick.color, alignItems: 'center', justifyContent: 'center' }}>
-            <T s={16} w={700} c={PLAT.kick.ink}>K</T>
-          </View>
+          <PlatLogo plat="kick" size={36} />
           <View style={{ flex: 1, gap: 2 }}>
             <T s={15} w={700}>Kick</T>
             <T s={12.5} c={s.muted}>Sem importação. Adicione pelo link do canal.</T>

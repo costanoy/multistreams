@@ -1,0 +1,19 @@
+# Hostinger (Apache): o site é uma SPA — qualquer caminho que não seja arquivo abre o index.html
+RewriteEngine On
+RewriteBase /
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+
+# o APK baixa como arquivo, com o tipo certo para o Android instalar
+AddType application/vnd.android.package-archive .apk
+<FilesMatch "\.apk$">
+  Header set Content-Disposition "attachment; filename=multistreams.apk"
+</FilesMatch>
+
+# index.html sempre fresco; o resto (js, fontes, imagens com hash no nome) pode ficar em cache
+<FilesMatch "index\.html$">
+  Header set Cache-Control "no-cache"
+</FilesMatch>

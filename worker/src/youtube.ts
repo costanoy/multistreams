@@ -59,9 +59,24 @@ async function categoryName(id: string): Promise<string> {
   return (await categories).get(id) ?? '';
 }
 
-const LIVE_WORD: Record<string, string> = { pt: 'ao vivo', en: 'live', es: 'en vivo', fr: 'en direct', de: 'live', it: 'in diretta', ja: 'ライブ', ko: '라이브' };
+const LIVE_WORD: Record<string, string> = { pt: 'ao vivo', es: 'en vivo', fr: 'en direct', it: 'in diretta', ja: 'ライブ', ko: '라이브', zh: '直播', ru: 'прямой эфир', tr: 'canlı', pl: 'na żywo', nl: 'live', ar: 'بث مباشر', hi: 'लाइव', id: 'live', th: 'ไลฟ์', vi: 'trực tiếp' };
 const found = new Map<string, { at: number; ids: string[] }>();
-const avatars = new Map<string, string>();
+
+/**
+ * Cota gasta hoje pela lista "tudo ao vivo" (o dia da cota vira à meia-noite do Pacífico).
+ * Passou do limite, a lista do YouTube para de atualizar até o dia seguinte e o resto da cota
+ * fica para acompanhar os canais seguidos e para adicionar canais.
+ */
+const budget = { day: '', spent: 0 };
+function spend(units: number): boolean {
+  const day = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+  if (budget.day !== day) Object.assign(budget, { day, spent: 0 });
+  if (budget.spent + units > config.browseYoutubeBudget) return false;
+  budget.spent += units;
+  return true;
+}
+
+const last = new Map<string, BrowseItem[]>();
 
 /**
  * Lives do YouTube com mais viewers em uma língua. Descobrir quem está ao vivo custa caro
@@ -70,7 +85,7 @@ const avatars = new Map<string, string>();
  */
 export async function topLive(lang: string): Promise<BrowseItem[]> {
   let d = found.get(lang);
-  if (!d || Date.now() - d.at > config.browseYoutube) {
+  if ((!d || Date.now() - d.at > config.browseYoutube) && spend(100)) {
     try {
       // sem um termo de busca a API devolve uma lista vazia; "ao vivo" na língua pedida é o mais neutro
       const s = await yt('search', { part: 'id', type: 'video', eventType: 'live', order: 'viewCount', q: LIVE_WORD[lang] ?? 'live', relevanceLanguage: lang, maxResults: '50' });
@@ -80,37 +95,30 @@ export async function topLive(lang: string): Promise<BrowseItem[]> {
       if (!d) throw e; // sem cota: segue com a última descoberta
     }
   }
-  if (!d!.ids.length) return [];
-  const r = await yt('videos', { part: 'snippet,liveStreamingDetails', id: d!.ids.join(',') });
+  if (!d?.ids.length) return [];
+  if (!spend(1)) return last.get(lang) ?? [];
+  const r = await yt('videos', { part: 'snippet,liveStreamingDetails', id: d.ids.join(',') });
   const live = (r.items ?? []).filter((v: any) => {
     const vl = langCode(v.snippet.defaultAudioLanguage ?? v.snippet.defaultLanguage);
     // relevanceLanguage é só uma dica: descarta o que declara outra língua
     return v.snippet.liveBroadcastContent === 'live' && (!vl || vl === lang);
   });
-  const need = [...new Set(live.map((v: any) => v.snippet.channelId as string))].filter(id => !avatars.has(id as string));
-  if (need.length) {
-    if (avatars.size > 5000) avatars.clear();
-    try {
-      const c = await yt('channels', { part: 'snippet', id: need.join(','), maxResults: '50' });
-      for (const x of c.items ?? []) avatars.set(x.id, x.snippet.thumbnails?.default?.url ?? '');
-    } catch {
-      // avatar é opcional
-    }
-  }
-  return Promise.all(live.map(async (v: any): Promise<BrowseItem> => ({
+  const items = await Promise.all(live.map(async (v: any): Promise<BrowseItem> => ({
     key: `youtube:${v.snippet.channelId}`,
     platform: 'youtube',
     channelId: v.snippet.channelId,
     login: '',
     name: v.snippet.channelTitle,
-    avatar: avatars.get(v.snippet.channelId) || null,
+    avatar: null,
     viewers: Number(v.liveStreamingDetails?.concurrentViewers) || 0,
     title: v.snippet.title,
     cat: await categoryName(v.snippet.categoryId),
-    thumb: v.snippet.thumbnails?.maxres?.url ?? v.snippet.thumbnails?.high?.url ?? v.snippet.thumbnails?.medium?.url ?? null,
+    thumb: v.snippet.thumbnails?.high?.url ?? v.snippet.thumbnails?.medium?.url ?? null,
     lang,
     url: `https://www.youtube.com/watch?v=${v.id}`,
   })));
+  last.set(lang, items);
+  return items;
 }
 
 /** Vídeos recentes pelo feed RSS do canal (não gasta cota). null = feed indisponível. */

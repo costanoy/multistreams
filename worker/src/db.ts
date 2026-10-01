@@ -50,7 +50,8 @@ export async function notifyLive(key: string, name: string, title: string, platf
     title: `${display} está ao vivo`,
     body: title ? `${title} · ${platformLabel}` : platformLabel,
     data: { url, key },
-    sound: 'default',
+    // som próprio do app (client/assets/sounds/notification.wav, embutido no build)
+    sound: 'notification.wav',
     channelId: 'live',
   }));
   for (const part of chunk(messages, 100)) {

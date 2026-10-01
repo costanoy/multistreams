@@ -1,5 +1,5 @@
 import { config } from './config.js';
-import { BrowseItem, Channel, HttpError, Live, chunk, getJson, langCode } from './types.js';
+import { BrowseItem, Channel, HttpError, Live, catKey, chunk, getJson, langCode } from './types.js';
 
 const API = 'https://api.kick.com/public/v1';
 let token: { value: string; exp: number } | null = null;
@@ -59,9 +59,23 @@ export async function search(q: string): Promise<Channel[]> {
   return c ? [c] : [];
 }
 
-/** As 100 lives com mais viewers da Kick em uma língua. */
-export async function topLive(lang: string): Promise<BrowseItem[]> {
-  const r = await kick('livestreams', [['limit', '100'], ['sort', 'viewer_count'], ['language', lang]]);
+/** Ids de categoria da Kick com esse nome (a busca da Kick é por trecho do nome). */
+const catIds = new Map<string, number[]>();
+export async function categoryIds(name: string): Promise<number[]> {
+  const k = catKey(name);
+  if (catIds.has(k)) return catIds.get(k)!;
+  const r = await kick('categories', [['q', name.replace(/\(.*?\)/g, '').trim()]]);
+  const ids = (r.data ?? []).filter((c: any) => catKey(c.name) === k).map((c: any) => c.id as number);
+  if (catIds.size > 2000) catIds.clear();
+  catIds.set(k, ids);
+  return ids;
+}
+
+/** As 100 lives com mais viewers da Kick em uma língua (e, opcionalmente, numa categoria). */
+export async function topLive(lang: string, categoryId?: number): Promise<BrowseItem[]> {
+  const params: [string, string][] = [['limit', '100'], ['sort', 'viewer_count'], ['language', lang]];
+  if (categoryId) params.push(['category_id', String(categoryId)]);
+  const r = await kick('livestreams', params);
   return (r.data ?? []).filter((s: any) => s.slug).map((s: any): BrowseItem => ({
     key: `kick:${s.slug}`,
     platform: 'kick',
@@ -72,6 +86,7 @@ export async function topLive(lang: string): Promise<BrowseItem[]> {
     viewers: s.viewer_count ?? 0,
     title: s.stream_title ?? '',
     cat: s.category?.name ?? '',
+    catId: s.category?.id,
     thumb: s.thumbnail || null,
     lang,
     url: `https://kick.com/${s.slug}`,

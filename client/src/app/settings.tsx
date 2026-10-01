@@ -1,16 +1,18 @@
 import { Pressable, View } from 'react-native';
 
 import { signOut } from '@/account';
+import { DownloadApk } from '@/DownloadApk';
 import { go } from '@/open';
 import { AccountBadge, Screen, accountSub, accountTitle } from '@/Shell';
 import { langSummary, useLists, useStore } from '@/store';
-import { Btn, Card, Chrome, T, useSkin } from '@/ui';
+import { Btn, Card, Chrome, Switch, T, useSkin } from '@/ui';
 
 export default function Settings() {
   const s = useSkin();
   const account = useStore(st => st.account);
   const langs = useStore(st => st.langs);
   const notifyAll = useStore(st => st.notifyAll);
+  const uiSounds = useStore(st => st.uiSounds);
   const shown = useLists().all.filter(x => langs.includes(x.effLang));
 
   const items: [string, string, string][] = [
@@ -40,6 +42,14 @@ export default function Settings() {
             </Pressable>
           ))}
         </Card>
+        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 58, paddingHorizontal: 14 }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <T s={15} w={600}>Sons dos botões</T>
+            <T s={12} c={s.muted}>Clique nos botões e nos interruptores. Respeita o modo silencioso do celular.</T>
+          </View>
+          <Switch on={uiSounds} onPress={() => useStore.setState({ uiSounds: !uiSounds })} />
+        </Card>
+        <DownloadApk variant="card" />
       </View>
     </Screen>
   );

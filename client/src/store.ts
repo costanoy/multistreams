@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { BrowseItem, Status, fetchBrowse, fetchStatus } from './api';
-import { DEFAULT_LANGS, LANGS, LANG_ORDER, PLAT, PLATS, Plat, SkinKey, ago } from './theme';
+import { DEFAULT_LANGS, LANGS, LANG_ORDER, PLAT, PLATS, Plat, SkinKey, ago, catKey } from './theme';
 
 export interface Streamer {
   /** `${plat}:${channelId}` */
@@ -19,6 +19,12 @@ export interface Streamer {
 
 export type Provider = 'twitch' | 'google';
 
+/** Modo da aba Ao vivo. */
+export type View = 'desc' | 'asc' | 'following';
+
+/** Tamanho de cada página da lista infinita. */
+export const PAGE = 50;
+
 interface State {
   hydrated: boolean;
   onboarded: boolean;
@@ -29,13 +35,21 @@ interface State {
   langs: string[];
   /** plataformas que aparecem em Ao vivo (mínimo 1) */
   platforms: Plat[];
-  /** Ao vivo mostra só a lista do usuário, em vez de tudo que está no ar */
-  onlyFollowed: boolean;
-  /** tudo que está ao vivo nas plataformas e línguas marcadas, por viewers */
+  view: View;
+  /** categorias marcadas (nomes); vazio = todas */
+  cats: string[];
+  /** páginas já carregadas de "tudo ao vivo" (na ordem do modo atual) */
   browse: BrowseItem[];
+  /** quantas lives existem no total com os filtros atuais */
+  browseTotal: number;
+  /** o worker ainda está varrendo alguma plataforma: a lista vai crescer */
+  browsePartial: boolean;
   browseAt: number | null;
+  browseLoading: boolean;
   skin: SkinKey;
   notifyAll: boolean;
+  /** sons de toque e liga/desliga (ligados por padrão) */
+  uiSounds: boolean;
   account: { provider: Provider; userId: string } | null;
   /** tokens das plataformas para importar seguidos (só em memória) */
   providerTokens: Partial<Record<Provider, string>>;
@@ -48,13 +62,20 @@ interface State {
   setStreamerLang: (id: string, lang: string) => void;
   toggleLang: (k: string) => void;
   togglePlatform: (p: Plat) => void;
+  toggleCat: (name: string) => void;
   refresh: () => Promise<boolean>;
-  refreshBrowse: () => Promise<boolean>;
+  /** recarrega "tudo ao vivo": `reset` volta ao topo; senão atualiza o que já está carregado */
+  refreshBrowse: (reset?: boolean) => Promise<boolean>;
+  loadMore: () => Promise<void>;
 }
 
 let browseSeq = 0;
-
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
+
+const dedupe = (items: BrowseItem[]) => {
+  const seen = new Set<string>();
+  return items.filter(i => !seen.has(i.key) && !!seen.add(i.key));
+};
 
 export const useStore = create<State>()(
   persist(
@@ -67,11 +88,16 @@ export const useStore = create<State>()(
       netDown: false,
       langs: DEFAULT_LANGS,
       platforms: PLATS,
-      onlyFollowed: false,
+      view: 'desc',
+      cats: [],
       browse: [],
+      browseTotal: 0,
+      browsePartial: false,
       browseAt: null,
+      browseLoading: false,
       skin: 'prata',
       notifyAll: true,
+      uiSounds: true,
       account: null,
       providerTokens: {},
       toast: null,
@@ -109,17 +135,42 @@ export const useStore = create<State>()(
         if (platforms.length === 1) return showToast('Mantenha pelo menos uma plataforma marcada');
         set({ platforms: platforms.filter(x => x !== p) });
       },
-      refreshBrowse: async () => {
+      toggleCat: name => {
+        const k = catKey(name);
+        const { cats } = get();
+        set({ cats: cats.some(c => catKey(c) === k) ? cats.filter(c => catKey(c) !== k) : [...cats, name] });
+      },
+      refreshBrowse: async reset => {
         const seq = ++browseSeq;
-        const { platforms, langs } = get();
+        const { platforms, langs, cats, view, browse } = get();
+        if (view === 'following') return true;
+        // atualizar sem voltar ao topo: relê o que já estava carregado (até um limite)
+        const limit = reset ? PAGE : Math.min(Math.max(PAGE, browse.length), 200);
+        if (reset) set({ browse: [], browseTotal: 0, browseAt: null });
+        set({ browseLoading: true });
         try {
-          const r = await fetchBrowse(platforms, langs);
+          const r = await fetchBrowse(platforms, langs, cats, view, 0, limit);
           // só vale a resposta do pedido mais recente (os filtros podem ter mudado no caminho)
-          if (seq === browseSeq) set({ browse: r.items, browseAt: Date.now(), netDown: false });
+          if (seq !== browseSeq) return true;
+          const rest = reset ? [] : get().browse.slice(limit);
+          set({ browse: dedupe([...r.items, ...rest]), browseTotal: r.total, browsePartial: r.partial, browseAt: Date.now(), netDown: false, browseLoading: false });
           return true;
         } catch {
-          if (seq === browseSeq) set({ netDown: true });
+          if (seq === browseSeq) set({ netDown: true, browseLoading: false });
           return false;
+        }
+      },
+      loadMore: async () => {
+        const { platforms, langs, cats, view, browse, browseTotal, browseLoading } = get();
+        if (view === 'following' || browseLoading || browse.length >= browseTotal) return;
+        const seq = browseSeq;
+        set({ browseLoading: true });
+        try {
+          const r = await fetchBrowse(platforms, langs, cats, view, browse.length, PAGE);
+          if (seq !== browseSeq) return;
+          set(s => ({ browse: dedupe([...s.browse, ...r.items]), browseTotal: r.total, browsePartial: r.partial, browseLoading: false }));
+        } catch {
+          if (seq === browseSeq) set({ browseLoading: false });
         }
       },
       refresh: async () => {
@@ -141,7 +192,10 @@ export const useStore = create<State>()(
     {
       name: 'multistreams',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: s => ({ onboarded: s.onboarded, streams: s.streams, statuses: s.statuses, statusAt: s.statusAt, langs: s.langs, platforms: s.platforms, onlyFollowed: s.onlyFollowed, skin: s.skin, notifyAll: s.notifyAll }),
+      // v1: os sons dos botões passaram a vir ligados; quem tinha o padrão antigo (desligado) recebe o novo
+      version: 1,
+      migrate: (old, from) => (from < 1 ? { ...(old as object), uiSounds: true } : old) as State,
+      partialize: s => ({ onboarded: s.onboarded, streams: s.streams, statuses: s.statuses, statusAt: s.statusAt, langs: s.langs, platforms: s.platforms, view: s.view, cats: s.cats, skin: s.skin, notifyAll: s.notifyAll, uiSounds: s.uiSounds }),
       onRehydrateStorage: () => () => useStore.setState({ hydrated: true }),
     },
   ),
@@ -202,30 +256,43 @@ export interface LiveCard {
   url: string | null;
 }
 
-/** O que a aba Ao vivo mostra agora, já filtrado por língua e plataforma e ordenado por viewers. */
+/** O que a aba Ao vivo mostra agora, já filtrado por língua e plataforma e na ordem do modo. */
 export function useLiveCards(): LiveCard[] {
   const { live } = useLists();
   const browse = useStore(s => s.browse);
   const langs = useStore(s => s.langs);
   const platforms = useStore(s => s.platforms);
-  const onlyFollowed = useStore(s => s.onlyFollowed);
-  if (onlyFollowed) {
+  const view = useStore(s => s.view);
+  const cats = useStore(s => s.cats);
+  const want = new Set(cats.map(catKey));
+  const inCats = (cat: string) => !want.size || want.has(catKey(cat));
+  if (view === 'following') {
     return live
-      .filter(x => platforms.includes(x.plat))
+      .filter(x => platforms.includes(x.plat) && inCats(x.status!.cat))
       .map(x => ({ id: x.id, plat: x.plat, name: x.name, title: x.status!.title, cat: x.status!.cat, thumb: x.status!.thumb, viewers: x.viewers, lang: x.effLang, followed: x, url: x.status!.url }));
   }
   const mine = new Map(live.map(x => [x.id, x]));
   return browse
-    .filter(b => platforms.includes(b.platform) && langs.includes(b.lang))
+    .filter(b => platforms.includes(b.platform) && langs.includes(b.lang) && inCats(b.cat))
     .map(b => ({ id: b.key, plat: b.platform, name: b.name, title: b.title, cat: b.cat, thumb: b.thumb, viewers: b.viewers, lang: b.lang, followed: mine.get(b.key), url: b.url }));
+}
+
+/** Quantas lives há no modo atual (no "tudo ao vivo", o total do worker, não só o que já carregou). */
+export function useLiveTotal(): number {
+  const cards = useLiveCards();
+  const view = useStore(s => s.view);
+  const total = useStore(s => s.browseTotal);
+  return view === 'following' ? cards.length : Math.max(total, cards.length);
 }
 
 export const platSummary = (platforms: Plat[]) =>
   platforms.length === PLATS.length ? 'Todas' : PLATS.filter(p => platforms.includes(p)).map(p => PLAT[p].label).join(', ');
 
-export const langSummary =(langs: string[]) => {
+export const langSummary = (langs: string[]) => {
   const codes = LANG_ORDER.filter(k => langs.includes(k)).map(x => x.toUpperCase());
   return codes.length === LANG_ORDER.length ? 'Todas' : codes.length > 3 ? codes.slice(0, 2).join(', ') + ' +' + (codes.length - 2) : codes.join(', ');
 };
 
-export const addedToast = (name: string, plat: Plat) => `${name} adicionado · ${PLAT[plat].label}`;
+export const catSummary = (cats: string[]) => (!cats.length ? 'Categorias' : cats.length === 1 ? cats[0] : `${cats[0]} +${cats.length - 1}`);
+
+export const addedToast =(name: string, plat: Plat) => `${name} adicionado · ${PLAT[plat].label}`;

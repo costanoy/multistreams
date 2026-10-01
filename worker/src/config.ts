@@ -17,6 +17,8 @@ export const config = {
   eventsubSecret: env('TWITCH_EVENTSUB_SECRET'),
   /** de quanto em quanto tempo redescobrir quem está ao vivo no YouTube (caro em cota) */
   browseYoutube: (Number(env('BROWSE_YOUTUBE_MINUTES')) || 60) * 60000,
+  /** quanto da cota diária do YouTube (10.000 no padrão) a lista "tudo ao vivo" pode gastar */
+  browseYoutubeBudget: Number(env('BROWSE_YOUTUBE_BUDGET')) || 6000,
   poll: { twitch: secs('POLL_TWITCH', 60), kick: secs('POLL_KICK', 60), youtube: secs('POLL_YOUTUBE', 180) },
 };
 

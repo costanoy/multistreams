@@ -72,8 +72,34 @@ export interface BrowseItem {
   url: string;
 }
 
-export const fetchBrowse = (platforms: Plat[], langs: string[]) =>
-  call<{ at: string; items: BrowseItem[] }>(`/browse?${qs({ platforms: platforms.join(','), langs: langs.join(',') })}`);
+export type Sort = 'desc' | 'asc';
+
+const filterQs = (platforms: Plat[], langs: string[], cats: string[] = []) => {
+  const q = new URLSearchParams({ platforms: platforms.join(','), langs: langs.join(',') });
+  cats.forEach(c => q.append('cat', c));
+  return q;
+};
+
+/** Uma página de "tudo ao vivo". `partial` = o worker ainda está varrendo alguma plataforma. */
+export const fetchBrowse = (platforms: Plat[], langs: string[], cats: string[], sort: Sort, offset: number, limit: number) => {
+  const q = filterQs(platforms, langs, cats);
+  q.set('sort', sort);
+  q.set('offset', String(offset));
+  q.set('limit', String(limit));
+  return call<{ at: string; total: number; partial: boolean; items: BrowseItem[] }>(`/browse?${q}`);
+};
+
+export interface Category {
+  key: string;
+  name: string;
+  viewers: number;
+  lives: number;
+  platforms: Plat[];
+}
+
+/** Categorias de quem está ao vivo agora (jogos, IRL, Just Chatting…), das mais assistidas para as menos. */
+export const fetchCategories = (platforms: Plat[], langs: string[]) =>
+  call<{ partial: boolean; items: Category[] }>(`/categories?${filterQs(platforms, langs)}`);
 
 export const errorText =(e: unknown, plat?: Plat) => {
   const code = e instanceof ApiError ? e.code : '';

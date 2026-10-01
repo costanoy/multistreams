@@ -18,7 +18,8 @@ export async function registerPush(supabase: SupabaseClient, userId: string) {
   if (!native || !Device.isDevice) return;
   try {
     if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('live', { name: 'Streamers ao vivo', importance: Notifications.AndroidImportance.HIGH });
+      // o som do canal não muda depois de criado no aparelho
+      await Notifications.setNotificationChannelAsync('live', { name: 'Streamers ao vivo', importance: Notifications.AndroidImportance.HIGH, sound: 'notification.wav' });
     }
     let { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') status = (await Notifications.requestPermissionsAsync()).status;

@@ -8,11 +8,11 @@
     "scheme": "multistreams",
     "userInterfaceStyle": "light",
     "ios": {
-      "bundleIdentifier": "com.multistreams.app",
+      "bundleIdentifier": "br.com.cyberhat.multistreams",
       "supportsTablet": true
     },
     "android": {
-      "package": "com.multistreams.app",
+      "package": "br.com.cyberhat.multistreams",
       "adaptiveIcon": {
         "backgroundColor": "#eceef1",
         "foregroundImage": "./assets/images/logo-round.png",
@@ -41,9 +41,14 @@
         {
           "icon": "./assets/images/icon-mono-white.png",
           "color": "#2f63d6",
-          "defaultChannel": "live"
+          "defaultChannel": "live",
+          "sounds": [
+            "./assets/sounds/notification.wav"
+          ]
         }
-      ]
+      ],
+      "expo-audio",
+      "expo-asset"
     ],
     "experiments": {
       "reactCompiler": true

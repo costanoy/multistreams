@@ -1,24 +1,25 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 
 import { LangList } from '@/LangList';
 import { go, openStream, openUrl } from '@/open';
-import { Screen, useWide } from '@/Shell';
-import { Item, LiveCard, langSummary, platSummary, useLists, useLiveCards, useStore } from '@/store';
+import { play } from '@/sounds';
+import { ScreenTitle, usePad, useWide } from '@/Shell';
+import { CatList } from '@/CatList';
+import { Item, LiveCard, View as Mode, catSummary, langSummary, platSummary, useLists, useLiveCards, useLiveTotal, useStore } from '@/store';
 import { AMBER, PLAT, PLATS, SH, fmt, grad } from '@/theme';
 import { Avatar, Btn, Card, Check, Chrome, Eq, Label, Lcd, LcdText, PlatChip, Rise, T, Thumb, useSkin } from '@/ui';
 
-const PAGE = 40;
+type Panel = 'plat' | 'lang' | 'cat';
+const PANEL_TITLE: Record<Panel, string> = { plat: 'MOSTRAR LIVES DA', lang: 'MOSTRAR LIVES EM', cat: 'MOSTRAR SÓ ESTAS CATEGORIAS' };
+
+const MODES: [Mode, string][] =[['desc', 'Mais espectadores'], ['asc', 'Menos espectadores'], ['following', 'Seguindo']];
 
 export default function Radar() {
   const onboarded = useStore(s => s.onboarded);
   if (!onboarded) return <Redirect href="/onboarding" />;
-  return (
-    <Screen action={{ label: '+ Adicionar streamer', onPress: () => go('/add') }}>
-      <Live />
-    </Screen>
-  );
+  return <Live />;
 }
 
 const open = (c: LiveCard) => (c.followed ? openStream(c.followed, c.followed.status) : c.url ? openUrl(c.url) : undefined);
@@ -26,72 +27,111 @@ const open = (c: LiveCard) => (c.followed ? openStream(c.followed, c.followed.st
 function Live() {
   const s = useSkin();
   const wide = useWide();
+  const pad = usePad();
   const langs = useStore(st => st.langs);
   const platforms = useStore(st => st.platforms);
-  const onlyFollowed = useStore(st => st.onlyFollowed);
-  const hasStreams = useStore(st => st.streams.length > 0);
-  const loaded = useStore(st => st.browseAt !== null);
-  const netDown = useStore(st => st.netDown);
-  const togglePlatform = useStore(st => st.togglePlatform);
+  const view = useStore(st => st.view);
+  const cats = useStore(st => st.cats);
+  const partial = useStore(st => st.browsePartial);
+  const loadMore = useStore(st => st.loadMore);
   const cards = useLiveCards();
-  const { offline } = useLists();
-  const [panel, setPanel] = useState<'plat' | 'lang' | null>(null);
-  const [offOpen, setOffOpen] = useState(false);
-  const [shown, setShown] = useState(PAGE);
 
-  // "tudo ao vivo" vem do worker e muda com os filtros; a lista do usuário é atualizada no layout raiz
-  const filters = `${platforms.join()}|${langs.join()}`;
+  // "tudo ao vivo" vem do worker, página por página; a lista do usuário é atualizada no layout raiz
+  const filters = `${view}|${platforms.join()}|${langs.join()}|${cats.join('|')}`;
   useEffect(() => {
-    if (onlyFollowed) return;
     const { refreshBrowse } = useStore.getState();
-    void refreshBrowse();
+    void refreshBrowse(true);
     const timer = setInterval(() => void refreshBrowse(), 60000);
     return () => clearInterval(timer);
-  }, [onlyFollowed, filters]);
+  }, [filters]);
+  // enquanto o worker ainda varre a Twitch, a lista cresce: relê com mais frequência
+  useEffect(() => {
+    if (!partial || view === 'following') return;
+    const timer = setInterval(() => void useStore.getState().refreshBrowse(), 8000);
+    return () => clearInterval(timer);
+  }, [partial, view]);
 
-  const pill = (key: 'plat' | 'lang', label: string) => (
-    <Pressable onPress={() => setPanel(p => (p === key ? null : key))} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: s.line, backgroundColor: panel === key ? s.field : s.card, borderRadius: 999, paddingVertical: 5, paddingHorizontal: 10, flexShrink: 1 }}>
+  const featured = view !== 'asc' ? cards[0] : undefined;
+  const rest = featured ? cards.slice(1) : cards;
+  const wrap = { width: '100%' as const, maxWidth: wide ? 1080 : undefined, alignSelf: 'center' as const };
+
+  return (
+    <FlatList
+      style={{ flex: 1, backgroundColor: s.panel }}
+      contentContainerStyle={pad}
+      data={rest}
+      keyExtractor={c => c.id}
+      renderItem={({ item }) => <View style={wrap}><Row card={item} thumbW={wide ? 148 : 96} /></View>}
+      ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+      onEndReached={() => void loadMore()}
+      onEndReachedThreshold={0.8}
+      keyboardShouldPersistTaps="handled"
+      ListHeaderComponent={
+        <View style={[wrap, { gap: 14, marginBottom: 14 }]}>
+          <ScreenTitle action={view === 'following' ? { label: '+ Adicionar streamer', onPress: () => go('/add') } : undefined} />
+          <Controls />
+          <Status />
+          {featured ? <Featured card={featured} thumbW={wide ? 240 : 128} /> : null}
+        </View>
+      }
+      ListFooterComponent={<View style={[wrap, { marginTop: 14 }]}><Footer /></View>}
+    />
+  );
+}
+
+function Controls() {
+  const s = useSkin();
+  const wide = useWide();
+  const langs = useStore(st => st.langs);
+  const platforms = useStore(st => st.platforms);
+  const view = useStore(st => st.view);
+  const cats = useStore(st => st.cats);
+  const togglePlatform = useStore(st => st.togglePlatform);
+  const total = useLiveTotal();
+  const [panel, setPanel] = useState<Panel | null>(null);
+
+  const pill = (key: Panel, label: string, active?: boolean) => (
+    <Pressable onPress={() => setPanel(p => (p === key ? null : key))} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: active ? s.accent : s.line, backgroundColor: panel === key ? s.field : s.card, borderRadius: 999, paddingVertical: 5, paddingHorizontal: 10, flexShrink: 1, maxWidth: 200 }}>
       <T s={12} w={600} lines={1}>{label}</T>
       <T s={10}>{panel === key ? '▴' : '▾'}</T>
     </Pressable>
   );
-  const visible = cards.slice(0, shown);
 
   return (
-    <View style={{ gap: 14 }}>
+    <>
       <NetBanner />
-
       <Chrome r={12} shadow="inset 0 1px 3px rgba(0,0,0,0.25)" style={{ flexDirection: 'row', padding: 3, gap: 3 }}>
-        {([[false, 'Tudo ao vivo'], [true, 'Só quem eu sigo']] as const).map(([value, label]) => {
-          const on = onlyFollowed === value;
+        {MODES.map(([value, label]) => {
+          const on = view === value;
           return (
-            <Pressable key={label} onPress={() => { useStore.setState({ onlyFollowed: value }); setShown(PAGE); }} style={{ flex: 1, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? s.card : 'transparent', boxShadow: on ? '0 1px 3px rgba(0,0,0,0.2)' : undefined }}>
-              <T s={13} w={600} c={on ? s.ink : s.frameInk}>{label}</T>
+            <Pressable key={value} onPress={() => { play('tap'); useStore.setState({ view: value }); }} style={{ flex: value === 'following' ? 0.75 : 1.1, height: 34, paddingHorizontal: 4, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? s.card : 'transparent', boxShadow: on ? '0 1px 3px rgba(0,0,0,0.2)' : undefined }}>
+              <T s={wide ? 13 : 11.5} w={600} c={on ? s.ink : s.frameInk} lines={1}>{label}</T>
             </Pressable>
           );
         })}
       </Chrome>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <Label>{cards.length} {cards.length === 1 ? 'CANAL' : 'CANAIS'} NO AR</Label>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <Label>{total.toLocaleString('pt-BR')} {total === 1 ? 'CANAL' : 'CANAIS'} NO AR</Label>
         <View style={{ flexDirection: 'row', gap: 6, flexShrink: 1 }}>
           {pill('plat', platSummary(platforms))}
           {pill('lang', langSummary(langs))}
+          {pill('cat', catSummary(cats), cats.length > 0)}
         </View>
       </View>
 
       {panel ? (
         <Rise key={panel}>
           <Card r={14} style={{ padding: 8, gap: 6, boxShadow: `0 0 0 1px ${s.line}, 0 6px 14px rgba(0,0,0,0.1)` }}>
-            <T s={11} w={700} ls={0.14} c={s.muted} style={{ paddingHorizontal: 4, paddingTop: 2 }}>{panel === 'lang' ? 'MOSTRAR LIVES EM' : 'MOSTRAR LIVES DA'}</T>
-            {panel === 'lang' ? <LangList compact cols={wide ? 4 : 2} /> : (
+            <T s={11} w={700} ls={0.14} c={s.muted} style={{ paddingHorizontal: 4, paddingTop: 2 }}>{PANEL_TITLE[panel]}</T>
+            {panel === 'lang' ? <LangList compact cols={wide ? 4 : 2} /> : panel === 'cat' ? <CatList cols={wide ? 3 : 1} /> : (
               <View style={{ flexDirection: wide ? 'row' : 'column' }}>
                 {PLATS.map(p => {
                   const on = platforms.includes(p);
                   return (
                     <Pressable key={p} onPress={() => togglePlatform(p)} style={{ flex: wide ? 1 : undefined, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 36, margin: 1, paddingHorizontal: 7, borderRadius: 10, backgroundColor: on ? s.field : 'transparent' }}>
                       <Check on={on} />
-                      <PlatChip plat={p} />
+                      <PlatChip plat={p} size={18} />
                       <T s={12.5} w={600}>{PLAT[p].label}</T>
                     </Pressable>
                   );
@@ -101,35 +141,62 @@ function Live() {
           </Card>
         </Rise>
       ) : null}
+    </>
+  );
+}
 
-      {onlyFollowed && !hasStreams ? <NoFollows /> : cards.length === 0 ? (
-        !onlyFollowed && !loaded && !netDown ? <ActivityIndicator color={s.muted} style={{ padding: 28 }} /> : (
-          <Card r={14} style={{ paddingVertical: 22, paddingHorizontal: 16 }}>
-            <T s={13.5} lh={1.45} c={s.muted} center>Ninguém ao vivo nas línguas e plataformas marcadas. Marque mais para ver outras lives.</T>
-          </Card>
-        )
-      ) : (
-        <>
-          <Hero card={visible[0]} />
-          {visible.length > 1 ? <View style={{ gap: 8 }}>{visible.slice(1).map(c => <Row key={c.id} card={c} thumbW={wide ? 148 : 96} />)}</View> : null}
-          {cards.length > shown ? <Btn h={44} fs={14} label={`Mostrar mais (${cards.length - shown})`} onPress={() => setShown(n => n + PAGE)} /> : null}
-        </>
-      )}
+/** Carregando, vazio, ou avisos sobre a lista. */
+function Status() {
+  const s = useSkin();
+  const view = useStore(st => st.view);
+  const hasStreams = useStore(st => st.streams.length > 0);
+  // ainda sem resposta para os filtros atuais
+  const waiting = useStore(st => (st.browseLoading && st.browse.length === 0) || (st.browseAt === null && !st.netDown));
+  const partial = useStore(st => st.browsePartial);
+  const empty = useLiveCards().length === 0;
 
-      {onlyFollowed && hasStreams ? (
-        <>
-          <Pressable onPress={() => setOffOpen(o => !o)} style={[grad(s.btn, s.btnFlat), { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 44, paddingHorizontal: 14, marginTop: 6, borderRadius: 12, boxShadow: 'inset 0 2px 1px rgba(255,255,255,0.6), inset 0 -3px 6px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.14)' }]}>
-            <T s={12} w={700} ls={0.14} c={s.btnInk}>OFFLINE · {offline.length}</T>
-            <T s={14} c={s.btnInk}>{offOpen ? '▾' : '▸'}</T>
-          </Pressable>
-          {offOpen ? <View style={{ gap: 6 }}>{offline.map(x => <OffRow key={x.id} item={x} />)}</View> : null}
-        </>
-      ) : null}
+  if (view === 'following' && !hasStreams) return <NoFollows />;
+  if (empty && view !== 'following' && waiting) return <ActivityIndicator color={s.muted} style={{ padding: 28 }} />;
+  if (empty) {
+    return (
+      <Card r={14} style={{ paddingVertical: 22, paddingHorizontal: 16 }}>
+        <T s={13.5} lh={1.45} c={s.muted} center>Ninguém ao vivo nas línguas e plataformas marcadas. Marque mais para ver outras lives.</T>
+      </Card>
+    );
+  }
+  if (view === 'asc' && partial) {
+    return (
+      <Card r={12} style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <ActivityIndicator color={s.muted} />
+        <T s={12.5} lh={1.4} c={s.muted} style={{ flex: 1 }}>Ainda juntando todas as lives da Twitch. Os canais com menos espectadores aparecem em instantes.</T>
+      </Card>
+    );
+  }
+  return null;
+}
+
+function Footer() {
+  const s = useSkin();
+  const view = useStore(st => st.view);
+  const hasStreams = useStore(st => st.streams.length > 0);
+  const more = useStore(st => st.browse.length > 0 && st.browse.length < st.browseTotal);
+  const { offline } = useLists();
+  const [offOpen, setOffOpen] = useState(false);
+
+  if (view !== 'following') return more ? <ActivityIndicator color={s.muted} style={{ padding: 18 }} /> : null;
+  if (!hasStreams) return null;
+  return (
+    <View style={{ gap: 6 }}>
+      <Pressable onPress={() => setOffOpen(o => !o)} style={[grad(s.btn, s.btnFlat), { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 44, paddingHorizontal: 14, marginTop: 6, borderRadius: 12, boxShadow: 'inset 0 2px 1px rgba(255,255,255,0.6), inset 0 -3px 6px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.14)' }]}>
+        <T s={12} w={700} ls={0.14} c={s.btnInk}>OFFLINE · {offline.length}</T>
+        <T s={14} c={s.btnInk}>{offOpen ? '▾' : '▸'}</T>
+      </Pressable>
+      {offOpen ? offline.map(x => <OffRow key={x.id} item={x} />) : null}
     </View>
   );
 }
 
-/** "Só quem eu sigo" sem ninguém na lista: de onde trazer os canais. */
+/** "Seguindo" sem ninguém na lista: de onde trazer os canais. */
 function NoFollows() {
   const s = useSkin();
   return (
@@ -154,12 +221,12 @@ function NoFollows() {
 
 function NetBanner() {
   const netDown = useStore(st => st.netDown);
-  const onlyFollowed = useStore(st => st.onlyFollowed);
-  const at = useStore(st => (st.onlyFollowed ? st.statusAt : st.browseAt));
+  const following = useStore(st => st.view === 'following');
+  const at = useStore(st => (st.view === 'following' ? st.statusAt : st.browseAt));
   if (!netDown) return null;
   const retry = async () => {
     const { refresh, refreshBrowse, showToast } = useStore.getState();
-    showToast((await (onlyFollowed ? refresh() : refreshBrowse())) ? 'Conectado. Status atualizado.' : 'Ainda sem conexão.');
+    showToast((await (following ? refresh() : refreshBrowse())) ? 'Conectado. Status atualizado.' : 'Ainda sem conexão.');
   };
   const time = at ? new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
   return (
@@ -173,29 +240,41 @@ function NetBanner() {
   );
 }
 
-function Hero({ card }: { card: LiveCard }) {
+/** Informações da live, iguais no destaque e nas linhas. */
+function Info({ card, big, ink, muted }: { card: LiveCard; big?: boolean; ink?: string; muted?: string }) {
   const s = useSkin();
   return (
-    <Pressable onPress={() => open(card)} style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1, width: '100%', maxWidth: 720 })}>
-      <Chrome style={{ padding: 10, paddingBottom: 14, gap: 12 }}>
-        <Thumb uri={card.thumb} r={14} shadow="inset 0 0 0 2px rgba(0,0,0,0.5)">
-          <View style={{ position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.72)', borderRadius: 6, paddingVertical: 5, paddingHorizontal: 8 }}>
-            <Eq color={s.lcdFg} />
-            <T s={11} w={700} ls={0.1} c="#fff">AO VIVO</T>
-          </View>
-          <Lcd r={6} style={{ position: 'absolute', bottom: 10, right: 10, paddingVertical: 6, paddingHorizontal: 8, boxShadow: '0 0 0 1px rgba(255,255,255,0.25)' }}>
-            <LcdText s={16}>{fmt(card.viewers)}</LcdText>
-          </Lcd>
-        </Thumb>
-        <View style={{ gap: 4, paddingHorizontal: 6 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <T s={18} w={700} c={s.frameInk} lines={1}>{card.name}</T>
-            <PlatChip plat={card.plat} size={18} full />
-            <T s={11} w={700} c={s.frameMuted}>{card.lang.toUpperCase()}</T>
-          </View>
-          {card.title ? <T s={14} lh={1.35} c={s.frameInk} lines={2}>{card.title}</T> : null}
-          {card.cat ? <T s={12.5} c={s.frameMuted}>{card.cat}</T> : null}
-        </View>
+    <View style={{ flex: 1, gap: 3 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+        <Eq color={big ? s.lcdFg : s.eq} />
+        <T s={big ? 16 : 15} w={700} c={ink} lines={1}>{card.name}</T>
+        <PlatChip plat={card.plat} size={big ? 18 : 16} />
+      </View>
+      <T s={13} c={ink} lines={big ? 2 : 1}>{card.title}</T>
+      <T s={11.5} c={muted ?? s.muted} lines={1}>{[card.cat, card.lang.toUpperCase()].filter(Boolean).join(' · ')}</T>
+    </View>
+  );
+}
+
+const Viewers = ({ n }: { n: number }) => {
+  const s = useSkin();
+  return (
+    <Lcd r={7} style={{ paddingTop: 6, paddingHorizontal: 7, paddingBottom: 5, alignItems: 'flex-end', gap: 3, minWidth: 52 }}>
+      <LcdText s={13}>{fmt(n)}</LcdText>
+      <T s={8} w={700} ls={0.14} c={s.lcdFg}>VIEWERS</T>
+    </Lcd>
+  );
+};
+
+/** A live com mais espectadores: mesmo formato das linhas, na moldura cromada. */
+function Featured({ card, thumbW }: { card: LiveCard; thumbW: number }) {
+  const s = useSkin();
+  return (
+    <Pressable onPress={() => open(card)} style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}>
+      <Chrome r={18} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 9, paddingRight: 11 }}>
+        <Thumb uri={card.thumb} width={thumbW} r={10} shadow="inset 0 0 0 2px rgba(0,0,0,0.5)" />
+        <Info card={card} big ink={s.frameInk} muted={s.frameMuted} />
+        <Viewers n={card.viewers} />
       </Chrome>
     </Pressable>
   );
@@ -206,19 +285,8 @@ function Row({ card, thumbW }: { card: LiveCard; thumbW: number }) {
   return (
     <Card r={14} onPress={() => open(card)} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', padding: 8, paddingRight: 10, boxShadow: SH.card(s.line) }}>
       <Thumb uri={card.thumb} width={thumbW} r={8} shadow={`0 0 0 2px ${s.bezelRing}`} />
-      <View style={{ flex: 1, gap: 3 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-          <Eq color={s.eq} />
-          <T s={15} w={700} lines={1}>{card.name}</T>
-          <PlatChip plat={card.plat} />
-        </View>
-        <T s={13} lines={1}>{card.title}</T>
-        <T s={11.5} c={s.muted} lines={1}>{[card.cat, card.lang.toUpperCase()].filter(Boolean).join(' · ')}</T>
-      </View>
-      <Lcd r={7} style={{ paddingTop: 6, paddingHorizontal: 7, paddingBottom: 5, alignItems: 'flex-end', gap: 3, minWidth: 52 }}>
-        <LcdText s={13}>{fmt(card.viewers)}</LcdText>
-        <T s={8} w={700} ls={0.14} c={s.lcdFg}>VIEWERS</T>
-      </Lcd>
+      <Info card={card} />
+      <Viewers n={card.viewers} />
     </Card>
   );
 }

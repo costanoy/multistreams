@@ -54,7 +54,19 @@ export interface BrowseItem {
   thumb: string | null;
   lang: string;
   url: string;
+  /** id da categoria na Kick (para pedir mais lives daquela categoria) */
+  catId?: number;
 }
+
+/** Chave para juntar a mesma categoria entre plataformas: "Grand Theft Auto V (GTA)" = "Grand Theft Auto V". */
+export const catKey = (name: string) =>
+  name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/\(.*?\)/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
 
 export class HttpError extends Error {
   constructor(public status: number, message: string) {

@@ -3,8 +3,10 @@ import { StatusBar } from 'expo-status-bar';
 import { ReactNode, useEffect } from 'react';
 import { BackHandler, Image, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DownloadApk } from './DownloadApk';
 import { go } from './open';
-import { useLiveCards, useStore } from './store';
+import { play } from './sounds';
+import { useLiveTotal, useStore } from './store';
 import { FONT, SH, grad } from './theme';
 import { Btn, Eq, Lcd, LcdText, Rise, T, useSkin } from './ui';
 
@@ -13,7 +15,13 @@ const logo = require('../assets/images/logo-round.png');
 type Key = 'radar' | 'add' | 'import' | 'settings' | 'languages' | 'notifications' | 'skins' | 'streamer';
 const PATH: Record<Key, string> = { radar: '/', add: '/add', import: '/import', settings: '/settings', languages: '/languages', notifications: '/notifications', skins: '/skins', streamer: '/streamer' };
 const TITLES: Record<Key, string> = { streamer: 'Streamer', radar: 'Ao vivo', add: 'Adicionar', import: 'Importar seguidos', settings: 'Ajustes', languages: 'Idiomas', notifications: 'Notificações', skins: 'Skin' };
-const WEB_SUB: Partial<Record<Key, string>> = { radar: 'Quem está no ar agora, do mais assistido para o menos.', add: 'Cole o link do canal ou busque pelo nome.', import: 'Traga quem você já segue.', settings: 'Conta e preferências.', languages: 'Quais línguas aparecem em Ao vivo.', notifications: 'Escolha de quem receber aviso.', skins: 'A carcaça do seu radar.' };
+const WEB_SUB: Partial<Record<Key, string>> = { add: 'Cole o link do canal ou busque pelo nome.', import: 'Traga quem você já segue.', settings: 'Conta e preferências.', languages: 'Quais línguas aparecem em Ao vivo.', notifications: 'Escolha de quem receber aviso.', skins: 'A carcaça do seu radar.' };
+
+/** Botões cromados da carcaça (abas, voltar, menu da web): som de toque + navegação. */
+const tapGo = (href: string) => {
+  play('tap');
+  go(href);
+};
 
 export const useWide = () => {
   const { width } = useWindowDimensions();
@@ -41,7 +49,7 @@ function useNav() {
 
 function LiveCounter({ big }: { big?: boolean }) {
   const s = useSkin();
-  const n = String(useLiveCards().length).padStart(2, '0');
+  const n = String(useLiveTotal()).padStart(2, '0');
   if (big) {
     return (
       <Lcd r={10} style={{ padding: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
@@ -68,7 +76,7 @@ function Header() {
   return (
     <View style={[grad(s.frame, s.frameTop), { paddingTop: top + 8, paddingHorizontal: 16, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 10, zIndex: 2, boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.28), 0 3px 10px rgba(0,0,0,0.16)' }]}>
       {backTo ? (
-        <Pressable onPress={() => go(backTo)} hitSlop={8} style={[grad(s.btn, s.btnFlat), { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', boxShadow: SH.bulb }]}>
+        <Pressable onPress={() => tapGo(backTo)} hitSlop={8} style={[grad(s.btn, s.btnFlat), { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', boxShadow: SH.bulb }]}>
           <T s={22} c={s.btnInk} style={{ lineHeight: 24, marginTop: -3, marginRight: 2 }}>‹</T>
         </Pressable>
       ) : null}
@@ -89,7 +97,7 @@ function TabBar() {
       {TABS.map(([k, label, glyph]) => {
         const on = tab === k;
         return (
-          <Pressable key={k} onPress={() => go(PATH[k])} style={{ alignItems: 'center', gap: 4, minWidth: 64 }}>
+          <Pressable key={k} onPress={() => tapGo(PATH[k])} style={{ alignItems: 'center', gap: 4, minWidth: 64 }}>
             <View style={[grad(on ? s.btnOn : s.btn, on ? s.btnOnFlat : s.btnFlat), { width: Platform.OS === 'ios' || !on ? 40 : 64, height: 40, borderRadius: 999, alignItems: 'center', justifyContent: 'center', boxShadow: on ? SH.pressed : SH.bulb }]}>
               <T s={18} w={700} c={on ? s.btnOnInk : s.btnInk}>{glyph}</T>
             </View>
@@ -118,7 +126,7 @@ function Sidebar() {
         {WEB_NAV.map(k => {
           const on = screen === k;
           return (
-            <Pressable key={k} onPress={() => go(PATH[k])} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, height: 42, paddingHorizontal: 12, borderRadius: 12, backgroundColor: on ? 'rgba(0,0,0,0.14)' : 'transparent', boxShadow: on ? 'inset 0 1px 3px rgba(0,0,0,0.3)' : undefined }}>
+            <Pressable key={k} onPress={() => tapGo(PATH[k])} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, height: 42, paddingHorizontal: 12, borderRadius: 12, backgroundColor: on ? 'rgba(0,0,0,0.14)' : 'transparent', boxShadow: on ? 'inset 0 1px 3px rgba(0,0,0,0.3)' : undefined }}>
               <View style={[grad(on ? s.btnOn : s.btn, on ? s.btnOnFlat : s.btnFlat), { width: 14, height: 14, borderRadius: 7, boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.8), inset 0 -2px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.3)' }]} />
               <T s={14} w={600} c={s.frameInk}>{TITLES[k]}</T>
             </Pressable>
@@ -126,7 +134,8 @@ function Sidebar() {
         })}
       </View>
       <View style={{ flex: 1 }} />
-      <Pressable onPress={() => go('/settings')} style={[grad(s.btn, s.btnFlat), { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, paddingHorizontal: 12, borderRadius: 14, boxShadow: 'inset 0 2px 1px rgba(255,255,255,0.6), inset 0 -3px 6px rgba(0,0,0,0.2), 0 2px 5px rgba(0,0,0,0.2)' }]}>
+      <DownloadApk variant="sidebar" />
+      <Pressable onPress={() => tapGo('/settings')} style={[grad(s.btn, s.btnFlat), { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, paddingHorizontal: 12, borderRadius: 14, boxShadow: 'inset 0 2px 1px rgba(255,255,255,0.6), inset 0 -3px 6px rgba(0,0,0,0.2), 0 2px 5px rgba(0,0,0,0.2)' }]}>
         <AccountBadge size={30} />
         <View style={{ gap: 1, flex: 1 }}>
           <T s={13} w={700} c={s.btnInk}>{accountTitle(account?.provider)}</T>
@@ -202,23 +211,37 @@ export function Shell({ children }: { children: ReactNode }) {
   );
 }
 
-/** Área rolável de cada tela. Na web larga, leva o título em Michroma e o subtítulo. */
-export function Screen({ children, action }: { children: ReactNode; action?: { label: string; onPress: () => void } }) {
+type Action = { label: string; onPress: () => void };
+
+/** Título em Michroma e subtítulo, só na web larga (no celular o título fica no header cromado). */
+export function ScreenTitle({ action }: { action?: Action }) {
   const s = useSkin();
   const wide = useWide();
   const { title, sub } = useNav();
+  if (!wide) return null;
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: s.panel }} keyboardShouldPersistTaps="handled" contentContainerStyle={wide ? { paddingTop: 32, paddingHorizontal: 36, paddingBottom: 48 } : { paddingTop: 16, paddingHorizontal: 14, paddingBottom: 24 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', paddingBottom: 4 }}>
+      <View style={{ gap: 6 }}>
+        <T s={24} ls={0.04} style={{ fontFamily: FONT.brand }}>{title}</T>
+        {sub ? <T s={14} c={s.muted}>{sub}</T> : null}
+      </View>
+      {action ? <Btn kind="accent" h={42} fs={14} label={action.label} onPress={action.onPress} /> : null}
+    </View>
+  );
+}
+
+/** Espaçamento das telas: mais largo na web. */
+export const usePad = () =>
+  useWide() ? { paddingTop: 32, paddingHorizontal: 36, paddingBottom: 48 } : { paddingTop: 16, paddingHorizontal: 14, paddingBottom: 24 };
+
+/** Área rolável de cada tela. */
+export function Screen({ children, action }: { children: ReactNode; action?: Action }) {
+  const s = useSkin();
+  const wide = useWide();
+  return (
+    <ScrollView style={{ flex: 1, backgroundColor: s.panel }} keyboardShouldPersistTaps="handled" contentContainerStyle={usePad()}>
       <View style={{ width: '100%', maxWidth: wide ? 1080 : undefined, alignSelf: 'center', gap: 16 }}>
-        {wide ? (
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', paddingBottom: 4 }}>
-            <View style={{ gap: 6 }}>
-              <T s={24} ls={0.04} style={{ fontFamily: FONT.brand }}>{title}</T>
-              {sub ? <T s={14} c={s.muted}>{sub}</T> : null}
-            </View>
-            {action ? <Btn kind="accent" h={42} fs={14} label={action.label} onPress={action.onPress} /> : null}
-          </View>
-        ) : null}
+        <ScreenTitle action={action} />
         {children}
       </View>
     </ScrollView>

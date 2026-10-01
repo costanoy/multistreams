@@ -1,8 +1,10 @@
 import { ReactNode, useEffect } from 'react';
 import { Image, Platform, Pressable, StyleProp, Text, TextStyle, View, ViewStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
+import Svg, { G, Path, Rect } from 'react-native-svg';
+import { play } from './sounds';
 import { useStore } from './store';
-import { FONT, PLAT, Plat, SH, SKINS, Skin, grad, hueOf } from './theme';
+import { FONT, Plat, SH, SKINS, Skin, grad, hueOf } from './theme';
 
 export const useSkin = (): Skin => SKINS[useStore(s => s.skin)] ?? SKINS.prata;
 
@@ -80,13 +82,40 @@ export function Eq({ color, h = 12, w = 3, bars = 3, gap = 2, still }: { color: 
 }
 
 /** Pastilha da plataforma: letra ("T") ou nome ("Twitch"). */
-export function PlatChip({ plat, size = 16, full }: { plat: Plat; size?: number; full?: boolean }) {
-  const p = PLAT[plat];
+const TWITCH_GLITCH = 'M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z';
+/** K em blocos, no estilo da marca da Kick */
+const KICK_K = 'M5 5h4.5v14H5z M9.5 10.25h3.25v3.5H9.5z M12.75 7.5h3v3h-3z M15.75 5H19v2.5h-3.25z M12.75 13.5h3v3h-3z M15.75 16.5H19V19h-3.25z';
+
+/** Logo da plataforma, em ladrilho, para ficar ao lado do nome do streamer. */
+export function PlatLogo({ plat, size = 16 }: { plat: Plat; size?: number }) {
+  const r = 5.5;
   return (
-    <View style={{ height: size, minWidth: size, paddingHorizontal: full ? 6 : 0, borderRadius: size <= 16 ? 4 : 5, backgroundColor: p.color, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <T s={Math.round(size * 0.6)} w={700} c={p.ink} ls={full ? 0.04 : 0}>{full ? p.label : p.letter}</T>
-    </View>
+    <Svg width={size} height={size} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+      {plat === 'twitch' ? (
+        <>
+          <Rect width={24} height={24} rx={r} fill="#9146ff" />
+          <G transform="translate(4.5 4.5) scale(0.625)">
+            <Path d={TWITCH_GLITCH} fill="#fff" />
+          </G>
+        </>
+      ) : plat === 'youtube' ? (
+        <>
+          <Rect y={3.5} width={24} height={17} rx={r} fill="#ff0000" />
+          <Path d="M9.6 8.2v7.6l6.4-3.8z" fill="#fff" />
+        </>
+      ) : (
+        <>
+          <Rect width={24} height={24} rx={r} fill="#0b0b0b" />
+          <Path d={KICK_K} fill="#53fc18" />
+        </>
+      )}
+    </Svg>
   );
+}
+
+/** Marca da plataforma ao lado do nome (logo). */
+export function PlatChip({ plat, size = 16 }: { plat: Plat; size?: number; full?: boolean }) {
+  return <PlatLogo plat={plat} size={size} />;
 }
 
 export function Avatar({ uri, name, size, gray }: { uri: string | null; name: string; size: number; gray?: number }) {
@@ -139,7 +168,7 @@ export function Btn({ label, onPress, kind = 'chrome', h = 48, fs, px, color, in
   const textColor = ink ?? (color ? '#fff' : kind === 'accent' ? s.accentInk : kind === 'outline' ? s.ink : s.btnInk);
   return (
     <Pressable
-      onPress={onPress}
+      onPress={onPress && (() => { play('tap'); onPress(); })}
       style={({ pressed }) => [{ height: h, borderRadius: 999, paddingHorizontal: px ?? (small ? 14 : 20), alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: pressed ? 0.85 : 1 }, look, style]}>
       <T s={fs ?? (small ? 12.5 : 15)} w={600} c={textColor} lines={1}>{label}</T>
     </Pressable>
@@ -174,7 +203,7 @@ export function Switch({ on, onPress, small }: { on: boolean; onPress: () => voi
   }, [on, x, w, knob]);
   const anim = useAnimatedStyle(() => ({ left: x.get() }));
   return (
-    <Pressable onPress={onPress} hitSlop={8} style={{ width: w, height: h, borderRadius: 999, backgroundColor: on ? s.swOn : s.swOff, boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.35)', flexShrink: 0 }}>
+    <Pressable onPress={() => { play(on ? 'off' : 'on'); onPress(); }} hitSlop={8} style={{ width: w, height: h, borderRadius: 999, backgroundColor: on ? s.swOn : s.swOff, boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.35)', flexShrink: 0 }}>
       <Animated.View style={[{ position: 'absolute', top: 3, width: knob, height: knob, borderRadius: knob / 2, boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.9), 0 1px 3px rgba(0,0,0,0.4)' }, grad(s.btn, s.btnFlat), anim]} />
     </Pressable>
   );
