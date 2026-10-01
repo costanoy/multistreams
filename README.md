@@ -57,7 +57,9 @@ Sem Supabase o app já funciona no modo "sem conta": a lista fica salva no apare
 
 A chave que assina o APK fica fora do projeto, em `%USERPROFILE%\multistreams-android-keystore\`. Guarde uma cópia: sem ela não dá para publicar atualizações do app.
 
-**Worker** (`api.multistreams.cyberhat.com.br`): Node.js app no hPanel (planos Business/Cloud), Node 22+, a partir do zip `deploy/worker-hostinger.zip` (ou do repositório, pasta `worker/`). Arquivo de entrada `dist/index.js` (comando `npm start`). As chaves vão em *Environment variables* (as mesmas do `worker/.env`), nunca no zip.
+**Worker** (`api.multistreams.cyberhat.com.br`): no Render, pelo `render.yaml` da raiz (New → Blueprint → este repositório). As chaves são pedidas na criação e ficam só no Render. O domínio é um CNAME na zona de DNS da Hostinger apontando para o endereço `.onrender.com` do serviço. No plano grátis o serviço dorme após 15 min sem acesso; um monitor de uptime batendo em `/health` a cada 5 min o mantém acordado.
+
+Se um dia o plano da Hostinger tiver Node.js, `deploy/worker-hostinger.zip` também serve (arquivo de entrada `dist/index.js`).
 
 ## Produção
 

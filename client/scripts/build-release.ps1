@@ -38,8 +38,9 @@ Write-Host "== Site (servidor: $ApiUrl)"
 npx.cmd expo export --platform web --output-dir dist --clear
 if ($LASTEXITCODE) { throw 'falhou o build do site' }
 
+# o .env vai junto: as chaves públicas do Supabase entram no APK (o endereço do worker vem da variável acima)
 Write-Host "== Copiando o app para $BuildDir"
-robocopy $root $BuildDir /MIR /XD "$root\android" "$root\ios" "$root\.expo" "$root\dist" /XF .env /NFL /NDL /NJH /NJS /NP | Out-Null
+robocopy $root $BuildDir /MIR /XD "$root\android" "$root\ios" "$root\.expo" "$root\dist" /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { throw 'falhou a cópia' }
 
 Write-Host '== APK'
