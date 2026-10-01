@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+# telas pessoais (ajustes, importação, detalhe de um streamer da lista de quem usa): nada útil para busca
+Disallow: /settings
+Disallow: /import
+Disallow: /notifications
+Disallow: /streamer
+
+Sitemap: https://multistreams.cyberhat.com.br/sitemap.xml

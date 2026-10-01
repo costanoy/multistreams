@@ -29,7 +29,7 @@ export default function Onboarding() {
       contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingTop: insets.top + 28, paddingHorizontal: 24, paddingBottom: insets.bottom + 36 }}>
       <View style={{ width: '100%', maxWidth: 400, alignItems: 'center', gap: 22 }}>
         <View style={{ borderRadius: 64, boxShadow: '0 8px 16px rgba(0,0,0,0.3)' }}>
-          <Image source={require('../../assets/images/logo-round.png')} style={{ width: 128, height: 128, borderRadius: 64 }} />
+          <Image source={require('../../assets/images/logo-round.png')} alt="Logo do Multistreams" style={{ width: 128, height: 128, borderRadius: 64 }} />
         </View>
         <View style={{ alignItems: 'center', gap: 10 }}>
           <T font="brand" s={22} ls={0.08} c={s.frameInk}>MULTISTREAMS</T>
@@ -38,7 +38,7 @@ export default function Onboarding() {
           </Lcd>
         </View>
         <View style={{ gap: 8 }}>
-          <T s={28} w={700} lh={1.1} c={s.frameInk} center>Quem está ao vivo agora, numa lista só.</T>
+          <T heading={1} s={28} w={700} lh={1.1} c={s.frameInk} center>Quem está ao vivo agora, numa lista só.</T>
           <T s={15} lh={1.4} c={s.frameMuted} center>Seus streamers da Twitch, do YouTube e da Kick em uma lista, do mais assistido para o menos, nas línguas que você escolher.</T>
         </View>
         <View style={{ width: '100%', gap: 10 }}>

@@ -19,13 +19,15 @@ interface TProps {
   center?: boolean;
   lines?: number;
   /** brilho de LCD */ glow?: string;
+  /** título da página: vira <h1>/<h2> no site (bom para leitores de tela e buscadores) */ heading?: 1 | 2;
   style?: StyleProp<TextStyle>;
 }
 
-export function T({ children, s = 15, w = 400, c, font, ls, lh, center, lines, glow, style }: TProps) {
+export function T({ children, s = 15, w = 400, c, font, ls, lh, center, lines, glow, heading, style }: TProps) {
   const skin = useSkin();
   return (
     <Text
+      {...(heading ? ({ role: 'heading', 'aria-level': heading } as object) : null)}
       numberOfLines={lines}
       style={[
         { fontSize: s, color: c ?? skin.ink, fontFamily: font ? FONT[font] : FONT[w] },

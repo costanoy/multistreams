@@ -1,19 +1,41 @@
 # Hostinger (Apache): o site é uma SPA — qualquer caminho que não seja arquivo abre o index.html
 RewriteEngine On
 RewriteBase /
-RewriteCond %{HTTPS} off
-RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# sempre HTTPS e sempre sem "www" (um endereço só, melhor para o Google)
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^www\. [NC]
+RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
 
-# o APK baixa como arquivo, com o tipo certo para o Android instalar
+# tipos que o Apache nem sempre conhece
 AddType application/vnd.android.package-archive .apk
+AddType application/manifest+json .webmanifest
+AddType font/ttf .ttf
+
+# o APK baixa como arquivo
 <FilesMatch "\.apk$">
   Header set Content-Disposition "attachment; filename=multistreams.apk"
 </FilesMatch>
 
-# index.html sempre fresco; o resto (js, fontes, imagens com hash no nome) pode ficar em cache
-<FilesMatch "index\.html$">
-  Header set Cache-Control "no-cache"
-</FilesMatch>
+# compacta texto (JS, HTML, CSS, JSON, SVG, fontes): carrega bem mais rápido
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript application/json application/manifest+json application/xml image/svg+xml font/ttf
+</IfModule>
+
+# cache: o index.html sempre fresco; JS e assets têm um código no nome que muda a cada versão, então podem ficar um ano
+<IfModule mod_headers.c>
+  <FilesMatch "index\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "\.(js|css|ttf|woff2?|png|jpg|jpeg|webp|svg|mp3|wav|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "^(og-image\.jpg|apple-touch-icon\.png|icon-\d+\.png|favicon\.ico|robots\.txt|sitemap\.xml|manifest\.webmanifest)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+</IfModule>

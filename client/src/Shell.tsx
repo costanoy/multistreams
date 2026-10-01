@@ -44,7 +44,7 @@ function useNav() {
     : screen === 'streamer' ? (from === 'notifications' ? 'settings' : 'radar')
     : screen === 'import' && from === 'add' ? 'add'
     : 'settings';
-  return { screen, title: (name ?? TITLES[screen]).toUpperCase(), sub: WEB_SUB[screen], backTo, tab };
+  return { screen, plain: name ?? TITLES[screen], title: (name ?? TITLES[screen]).toUpperCase(), sub: WEB_SUB[screen], backTo, tab };
 }
 
 function LiveCounter({ big }: { big?: boolean }) {
@@ -80,7 +80,7 @@ function Header() {
           <T s={22} c={s.btnInk} style={{ lineHeight: 24, marginTop: -3, marginRight: 2 }}>‹</T>
         </Pressable>
       ) : null}
-      <T font="brand" s={Platform.OS === 'ios' ? 17 : 16} ls={0.04} c={s.frameInk} lines={1} style={{ flex: 1 }}>{title}</T>
+      <T heading={1} font="brand" s={Platform.OS === 'ios' ? 17 : 16} ls={0.04} c={s.frameInk} lines={1} style={{ flex: 1 }}>{title}</T>
       <LiveCounter />
     </View>
   );
@@ -118,7 +118,7 @@ function Sidebar() {
   return (
     <View style={[grad(s.frame, s.frameTop), { width: 256, gap: 22, paddingVertical: 24, paddingHorizontal: 16, zIndex: 2, boxShadow: 'inset -1px 0 0 rgba(0,0,0,0.25), 4px 0 14px rgba(0,0,0,0.12)' }]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 6 }}>
-        <Image source={logo} style={{ width: 34, height: 34, borderRadius: 17 }} />
+        <Image source={logo} alt="Logo do Multistreams" style={{ width: 34, height: 34, borderRadius: 17 }} />
         <T font="brand" s={13} ls={0.08} c={s.frameInk}>MULTISTREAMS</T>
       </View>
       <LiveCounter big />
@@ -179,8 +179,14 @@ export function Shell({ children }: { children: ReactNode }) {
   const s = useSkin();
   const wide = useWide();
   const pathname = usePathname();
-  const { backTo } = useNav();
+  const { backTo, plain, screen } = useNav();
   const bare = pathname === '/onboarding';
+
+  // título da aba do navegador por tela (a inicial mantém o título completo do index.html)
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    document.title = bare || screen === 'radar' ? 'Multistreams — quem está ao vivo na Twitch, YouTube e Kick' : `${plain} · Multistreams`;
+  }, [bare, screen, plain]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -222,7 +228,7 @@ export function ScreenTitle({ action }: { action?: Action }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', paddingBottom: 4 }}>
       <View style={{ gap: 6 }}>
-        <T s={24} ls={0.04} style={{ fontFamily: FONT.brand }}>{title}</T>
+        <T heading={1} s={24} ls={0.04} style={{ fontFamily: FONT.brand }}>{title}</T>
         {sub ? <T s={14} c={s.muted}>{sub}</T> : null}
       </View>
       {action ? <Btn kind="accent" h={42} fs={14} label={action.label} onPress={action.onPress} /> : null}

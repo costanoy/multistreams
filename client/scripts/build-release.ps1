@@ -3,6 +3,7 @@
 # Uso (PowerShell, dentro de client/):
 #   $env:MULTISTREAMS_KEYSTORE_PASSWORD = '<senha do LEIA-ME.txt da chave>'
 #   powershell -ExecutionPolicy Bypass -File .\scripts\build-release.ps1
+#   (só o site, mantendo o APK que já está em dist/: acrescente -SoSite)
 #
 # Requisitos: Android SDK (Android Studio) e um JDK 17 em %USERPROFILE%\.jdks\jdk-17*.
 #
@@ -14,13 +15,14 @@ param(
   [string]$ApiUrl = 'https://api.multistreams.cyberhat.com.br',
   [string]$Keystore = "$env:USERPROFILE\multistreams-android-keystore\multistreams.jks",
   [string]$BuildDir = 'C:\ms-build\client',
-  [string]$SdkLink = 'C:\android-sdk'
+  [string]$SdkLink = 'C:\android-sdk',
+  [switch]$SoSite
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
 
-if (-not $env:MULTISTREAMS_KEYSTORE_PASSWORD) { throw 'Defina $env:MULTISTREAMS_KEYSTORE_PASSWORD com a senha da chave do APK.' }
+if (-not $SoSite -and -not $env:MULTISTREAMS_KEYSTORE_PASSWORD) { throw 'Defina $env:MULTISTREAMS_KEYSTORE_PASSWORD com a senha da chave do APK.' }
 if (-not (Test-Path $Keystore)) { throw "Chave do APK não encontrada em $Keystore" }
 $jdk = Get-ChildItem "$env:USERPROFILE\.jdks" -Directory -Filter 'jdk-17*' | Select-Object -First 1
 if (-not $jdk) { throw 'JDK 17 não encontrado em %USERPROFILE%\.jdks' }
@@ -35,8 +37,15 @@ $env:NODE_ENV = 'production'
 $env:CI = '1'
 
 Write-Host "== Site (servidor: $ApiUrl)"
+# o export apaga a pasta dist inteira: guarda o APK antes
+$apkTmp = Join-Path $env:TEMP 'multistreams-apk-backup.apk'
+if (Test-Path dist\multistreams.apk) { Copy-Item dist\multistreams.apk $apkTmp -Force }
 npx.cmd expo export --platform web --output-dir dist --clear
 if ($LASTEXITCODE) { throw 'falhou o build do site' }
+if ($SoSite) {
+  if (Test-Path $apkTmp) { Move-Item $apkTmp dist\multistreams.apk -Force; Write-Host '== Pronto (só o site; APK mantido)' } else { Write-Host '== Pronto (só o site; não havia APK para manter)' }
+  return
+}
 
 # o .env vai junto: as chaves públicas do Supabase entram no APK (o endereço do worker vem da variável acima)
 Write-Host "== Copiando o app para $BuildDir"
@@ -64,5 +73,6 @@ if ($LASTEXITCODE) { throw 'falhou a assinatura do APK' }
 & "$($tools.FullName)\apksigner.bat" verify dist\multistreams.apk
 if ($LASTEXITCODE) { throw 'APK assinado não passou na verificação' }
 
+[IO.File]::Delete($apkTmp)  # o APK novo substituiu o guardado
 $mb = [math]::Round((Get-Item dist\multistreams.apk).Length / 1MB, 1)
 Write-Host "== Pronto: $root\dist (suba o CONTEÚDO desta pasta). APK: $mb MB"
