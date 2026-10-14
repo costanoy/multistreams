@@ -35,6 +35,11 @@ $env:ANDROID_SDK_ROOT = $SdkLink
 $env:EXPO_PUBLIC_API_URL = $ApiUrl   # vale mais que o client/.env (que aponta para o localhost)
 $env:NODE_ENV = 'production'
 $env:CI = '1'
+# o Java 17 abre um socket local (AF_UNIX) na pasta temporária; com o nome curto do Windows
+# (C:\Users\VINICI~1\...) a conexão falha ("Unable to establish loopback connection") e o Gradle não sobe
+$javaTmp = Join-Path (Split-Path $BuildDir -Parent) 'tmp'
+New-Item -ItemType Directory -Force $javaTmp | Out-Null
+$env:JAVA_TOOL_OPTIONS = "-Djdk.net.unixdomain.tmpdir=$javaTmp"
 
 Write-Host "== Site (servidor: $ApiUrl)"
 # o export apaga a pasta dist inteira: guarda o APK antes
