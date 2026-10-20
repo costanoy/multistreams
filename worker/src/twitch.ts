@@ -95,6 +95,17 @@ export async function lastLiveAt(id: string): Promise<string | null> {
   }
 }
 
+/** Foto de perfil dos canais (a Get Streams não traz). Todo id consultado entra no resultado: null = sem foto. */
+export async function avatars(ids: string[]): Promise<Map<string, string | null>> {
+  const out = new Map<string, string | null>();
+  for (const part of chunk(ids, 100)) {
+    const r = await helix('users', part.map((id): [string, string] => ['id', id]));
+    for (const id of part) out.set(id, null);
+    for (const u of r.data) out.set(u.id, u.profile_image_url || null);
+  }
+  return out;
+}
+
 const MAX_PAGES = 1000;
 
 /**

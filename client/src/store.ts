@@ -246,6 +246,8 @@ export interface LiveCard {
   id: string;
   plat: Plat;
   name: string;
+  /** foto do canal; sem ela, aparece a inicial do nome */
+  avatar: string | null;
   title: string;
   cat: string;
   thumb: string | null;
@@ -269,12 +271,12 @@ export function useLiveCards(): LiveCard[] {
   if (view === 'following') {
     return live
       .filter(x => platforms.includes(x.plat) && inCats(x.status!.cat))
-      .map(x => ({ id: x.id, plat: x.plat, name: x.name, title: x.status!.title, cat: x.status!.cat, thumb: x.status!.thumb, viewers: x.viewers, lang: x.effLang, followed: x, url: x.status!.url }));
+      .map(x => ({ id: x.id, plat: x.plat, name: x.name, avatar: x.avatar, title: x.status!.title, cat: x.status!.cat, thumb: x.status!.thumb, viewers: x.viewers, lang: x.effLang, followed: x, url: x.status!.url }));
   }
   const mine = new Map(live.map(x => [x.id, x]));
   return browse
     .filter(b => platforms.includes(b.platform) && langs.includes(b.lang) && inCats(b.cat))
-    .map(b => ({ id: b.key, plat: b.platform, name: b.name, title: b.title, cat: b.cat, thumb: b.thumb, viewers: b.viewers, lang: b.lang, followed: mine.get(b.key), url: b.url }));
+    .map(b => ({ id: b.key, plat: b.platform, name: b.name, avatar: b.avatar ?? mine.get(b.key)?.avatar ?? null, title: b.title, cat: b.cat, thumb: b.thumb, viewers: b.viewers, lang: b.lang, followed: mine.get(b.key), url: b.url }));
 }
 
 /** Quantas lives há no modo atual (no "tudo ao vivo", o total do worker, não só o que já carregou). */

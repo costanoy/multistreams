@@ -127,13 +127,40 @@ async function collect(platforms: Platform[], langs: string[], cats: string[]) {
   return { desc: m.desc, partial: parts.some(s => !s.complete) };
 }
 
+/** Foto do canal por chave: a Get Streams da Twitch e a busca do YouTube não trazem (a Kick já manda). */
+const AVATAR_TTL = 24 * 3600e3;
+const avatarCache = new Map<string, { url: string | null; at: number }>();
+const AVATAR_LOOKUP: [Platform, (ids: string[]) => Promise<Map<string, string | null>>][] = [
+  ['twitch', twitch.avatars],
+  ['youtube', youtube.avatars],
+];
+
+/** Completa a foto das lives de uma página, consultando só os canais que ainda não estão no cache. */
+async function withAvatars(items: BrowseItem[]): Promise<BrowseItem[]> {
+  const now = Date.now();
+  await Promise.all(AVATAR_LOOKUP.map(async ([p, lookup]) => {
+    const stale = items.filter(i => i.platform === p && !i.avatar && now - (avatarCache.get(i.key)?.at ?? 0) >= AVATAR_TTL);
+    const ids = [...new Set(stale.map(i => i.channelId))];
+    if (!ids.length || !enabled[p]) return;
+    try {
+      const found = await lookup(ids);
+      if (avatarCache.size > 50000) avatarCache.clear();
+      for (const [id, url] of found) avatarCache.set(`${p}:${id}`, { url, at: now });
+    } catch (e) {
+      // sem foto a lista continua funcionando: tenta de novo no próximo pedido
+      console.warn(`[${p}] fotos dos canais:`, (e as Error).message);
+    }
+  }));
+  return items.map(i => (i.avatar ? i : { ...i, avatar: avatarCache.get(i.key)?.url ?? null }));
+}
+
 export async function browse(platforms: Platform[], langs: string[], cats: string[], sort: 'desc' | 'asc', offset: number, limit: number) {
   const { desc, partial } = await collect(platforms, langs, cats);
   const total = desc.length;
   const items =
     sort === 'desc' ? desc.slice(offset, offset + limit)
     : desc.slice(Math.max(0, total - offset - limit), Math.max(0, total - offset)).reverse();
-  return { total, partial, items };
+  return { total, partial, items: await withAvatars(items) };
 }
 
 export interface Category {

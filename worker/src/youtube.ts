@@ -121,6 +121,21 @@ export async function topLive(lang: string): Promise<BrowseItem[]> {
   return items;
 }
 
+/**
+ * Foto dos canais (a busca e a videos.list não trazem). Custa 1 unidade a cada 50 canais, da cota da
+ * lista "tudo ao vivo"; sem cota, os canais que faltaram ficam fora do resultado e são pedidos depois.
+ */
+export async function avatars(ids: string[]): Promise<Map<string, string | null>> {
+  const out = new Map<string, string | null>();
+  for (const part of chunk(ids, 50)) {
+    if (!spend(1)) break;
+    const r = await yt('channels', { part: 'snippet', id: part.join(','), maxResults: '50' });
+    for (const id of part) out.set(id, null);
+    for (const c of r.items ?? []) out.set(c.id, c.snippet?.thumbnails?.default?.url ?? null);
+  }
+  return out;
+}
+
 /** Vídeos recentes pelo feed RSS do canal (não gasta cota). null = feed indisponível. */
 async function feed(channelId: string): Promise<string[] | null> {
   try {

@@ -61,7 +61,7 @@ function Live() {
       contentContainerStyle={pad}
       data={rest}
       keyExtractor={c => c.id}
-      renderItem={({ item }) => <View style={wrap}><Row card={item} thumbW={wide ? 148 : 96} /></View>}
+      renderItem={({ item }) => <View style={wrap}><Row card={item} thumbW={wide ? 148 : 96} face={wide ? 30 : 22} /></View>}
       ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
       onEndReached={() => void loadMore()}
       onEndReachedThreshold={0.8}
@@ -71,7 +71,7 @@ function Live() {
           <ScreenTitle action={view === 'following' ? { label: '+ Adicionar streamer', onPress: () => go('/add') } : undefined} />
           <Controls />
           <Status />
-          {featured ? <Featured card={featured} thumbW={wide ? 240 : 128} /> : null}
+          {featured ? <Featured card={featured} thumbW={wide ? 240 : 128} face={wide ? 40 : 28} /> : null}
         </View>
       }
       ListFooterComponent={<View style={[wrap, { marginTop: 14 }]}><Footer /></View>}
@@ -266,13 +266,26 @@ const Viewers = ({ n }: { n: number }) => {
   );
 };
 
+/** Foto do streamer no canto da tela da live, num botão cromado como o da tela do streamer. */
+function Face({ card, size }: { card: LiveCard; size: number }) {
+  const s = useSkin();
+  const ring = size >= 28 ? 3 : 2;
+  return (
+    <View style={[grad(s.btn, s.btnFlat), { position: 'absolute', left: ring + 2, bottom: ring + 2, padding: ring, borderRadius: 999, boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.8), 0 2px 5px rgba(0,0,0,0.45)' }]}>
+      <Avatar uri={card.avatar} name={card.name} size={size} />
+    </View>
+  );
+}
+
 /** A live com mais espectadores: mesmo formato das linhas, na moldura cromada. */
-function Featured({ card, thumbW }: { card: LiveCard; thumbW: number }) {
+function Featured({ card, thumbW, face }: { card: LiveCard; thumbW: number; face: number }) {
   const s = useSkin();
   return (
     <Pressable onPress={() => open(card)} style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}>
       <Chrome r={18} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 9, paddingRight: 11 }}>
-        <Thumb uri={card.thumb} width={thumbW} r={10} shadow="inset 0 0 0 2px rgba(0,0,0,0.5)" />
+        <Thumb uri={card.thumb} width={thumbW} r={10} shadow="inset 0 0 0 2px rgba(0,0,0,0.5)">
+          <Face card={card} size={face} />
+        </Thumb>
         <Info card={card} big ink={s.frameInk} muted={s.frameMuted} />
         <Viewers n={card.viewers} />
       </Chrome>
@@ -280,11 +293,13 @@ function Featured({ card, thumbW }: { card: LiveCard; thumbW: number }) {
   );
 }
 
-function Row({ card, thumbW }: { card: LiveCard; thumbW: number }) {
+function Row({ card, thumbW, face }: { card: LiveCard; thumbW: number; face: number }) {
   const s = useSkin();
   return (
     <Card r={14} onPress={() => open(card)} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', padding: 8, paddingRight: 10, boxShadow: SH.card(s.line) }}>
-      <Thumb uri={card.thumb} width={thumbW} r={8} shadow={`0 0 0 2px ${s.bezelRing}`} />
+      <Thumb uri={card.thumb} width={thumbW} r={8} shadow={`0 0 0 2px ${s.bezelRing}`}>
+        <Face card={card} size={face} />
+      </Thumb>
       <Info card={card} />
       <Viewers n={card.viewers} />
     </Card>
