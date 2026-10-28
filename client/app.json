@@ -2,7 +2,7 @@
   "expo": {
     "name": "Multistreams",
     "slug": "multistreams",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/logo-round.png",
     "scheme": "multistreams",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "br.com.cyberhat.multistreams",
-      "versionCode": 5,
+      "versionCode": 6,
       "adaptiveIcon": {
         "backgroundColor": "#eceef1",
         "foregroundImage": "./assets/images/adaptive-foreground.png",
