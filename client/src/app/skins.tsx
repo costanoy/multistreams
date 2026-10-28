@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import { Screen, useWide } from '@/Shell';
 import { useStore } from '@/store';
 import { FONT, SKINS, SkinKey, grad } from '@/theme';
-import { T, useSkin } from '@/ui';
+import { T, spaceKey, useSkin } from '@/ui';
 
 const knob = 'inset 0 1px 1px rgba(255,255,255,0.8), inset 0 -2px 3px rgba(0,0,0,0.3)';
 
@@ -14,12 +14,13 @@ export default function Skins() {
   return (
     <Screen>
       <View style={{ gap: 14 }}>
-        <View style={{ flexDirection: wide ? 'row' : 'column', gap: 12 }}>
+        <View role="radiogroup" style={{ flexDirection: wide ? 'row' : 'column', gap: 12 }}>
           {(Object.keys(SKINS) as SkinKey[]).map(k => {
             const x = SKINS[k];
             const sel = k === current;
+            const pick = () => useStore.setState({ skin: k });
             return (
-              <Pressable key={k} onPress={() => useStore.setState({ skin: k })} style={{ flex: wide ? 1 : undefined, gap: 8 }}>
+              <Pressable key={k} role="radio" aria-checked={sel} aria-label={x.name} {...spaceKey(pick)} onPress={pick} style={{ flex: wide ? 1 : undefined, gap: 8 }}>
                 <View style={{ borderRadius: 18, boxShadow: sel ? `0 0 0 3px ${s.accent}, 0 6px 16px rgba(0,0,0,0.18)` : `0 0 0 1px ${s.line}, 0 3px 10px rgba(0,0,0,0.12)` }}>
                   <View style={{ borderRadius: 18, overflow: 'hidden' }}>
                     <View style={[grad(x.frame, x.frameTop), { height: 48, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12 }]}>
@@ -27,7 +28,7 @@ export default function Skins() {
                       <View style={[grad(x.btn, x.btnFlat), { width: 22, height: 22, borderRadius: 11, boxShadow: knob }]} />
                       <View style={{ flex: 1 }} />
                       <View style={[grad(x.lcdBg, x.lcdFlat), { borderRadius: 5, paddingVertical: 4, paddingHorizontal: 6 }]}>
-                        <T s={11} c={x.lcdFg} glow={x.lcdGlow} style={{ fontFamily: FONT.lcd }}>12.4K</T>
+                        <T s={11} c={x.lcdFg} glow={x.lcdGlow} style={{ fontFamily: FONT.lcd }}>12K</T>
                       </View>
                     </View>
                     <View style={{ backgroundColor: x.panel, paddingVertical: 10, paddingHorizontal: 12, gap: 6 }}>

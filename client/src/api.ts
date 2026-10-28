@@ -25,30 +25,45 @@ export interface Status {
   lastLiveAt: string | null;
   url: string | null;
   checkedAt: string;
+  /** o servidor não conseguiu confirmar este status há algum tempo (pode estar velho) */
+  stale?: boolean;
 }
 
+/**
+ * Falha de uma chamada ao worker. `code`: 'network' (sem rede ou servidor inalcançável), 'timeout'
+ * (desistiu de esperar) ou o `error` que o worker devolveu ('rate_limited', 'quota', 'too_large'…).
+ * `bucket`, só com 'quota': 'searches' (acabaram as buscas do YouTube; colar o link ainda funciona) ou 'units'.
+ * O worker antigo não manda o campo: sem ele, trate como 'units'.
+ */
 export class ApiError extends Error {
-  constructor(public code: string) {
+  constructor(public code: string, public bucket?: 'units' | 'searches') {
     super(code);
   }
 }
 
+const bucketOf = (v: unknown) => (v === 'units' || v === 'searches' ? v : undefined);
+
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   if (!BASE) throw new ApiError('no_api');
-  let res: Response;
   // no Android, um endereço que não responde (DNS ou servidor fora do ar) pode deixar a chamada
-  // pendurada para sempre: desiste em 25 s para a tela mostrar "Sem conexão"
+  // pendurada para sempre: desiste em 25 s (contando a leitura da resposta) para a tela mostrar o aviso
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), 25000);
+  const failed = () => new ApiError(abort.signal.aborted ? 'timeout' : 'network');
   try {
-    res = await fetch(BASE + path, { ...init, signal: abort.signal });
-  } catch {
-    throw new ApiError('network');
+    const res = await fetch(BASE + path, { ...init, signal: abort.signal }).catch(() => {
+      throw failed();
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new ApiError(body?.error ?? 'upstream_error', bucketOf(body?.bucket));
+    }
+    return await res.json().catch(() => {
+      throw abort.signal.aborted ? failed() : new ApiError('upstream_error');
+    });
   } finally {
     clearTimeout(timer);
   }
-  if (!res.ok) throw new ApiError((await res.json().catch(() => null))?.error ?? 'upstream_error');
-  return res.json();
 }
 
 const qs = (o: Record<string, string>) => new URLSearchParams(o).toString();
@@ -112,5 +127,9 @@ export const errorText =(e: unknown, plat?: Plat) => {
   if (code === 'platform_not_configured' && plat) return `${PLAT[plat].label} ainda não está configurada no servidor.`;
   if (code === 'no_api') return 'Servidor não configurado (EXPO_PUBLIC_API_URL).';
   if (code === 'network') return 'Sem conexão com o servidor.';
+  if (code === 'timeout') return 'O servidor demorou para responder. Tente de novo.';
+  if (code === 'rate_limited') return 'Muitas consultas seguidas. Espere um pouco e tente de novo.';
+  if (code === 'quota' && plat === 'youtube') return 'A busca do YouTube chegou ao limite de hoje. Cole o link do canal (youtube.com/@…).';
+  if (code === 'too_large') return 'Consulta grande demais para o servidor. Tente com menos canais.';
   return 'Não deu para consultar agora. Tente de novo.';
 };

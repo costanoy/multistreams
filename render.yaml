@@ -1,6 +1,9 @@
 # Render (Blueprint): o worker do Multistreams como serviço web.
 # No painel do Render: New → Blueprint → escolha este repositório. As chaves (sync: false)
 # são pedidas na criação e ficam só no Render, nunca no repositório.
+# Plano free: dorme depois de 15 min sem acesso e leva ~1 min para acordar (mais que os 25 s do app).
+# Um monitor de uptime chamando /health a cada 5 min o mantém acordado; se ele parar, param o polling
+# e o push (README, "Worker no Render").
 services:
   - type: web
     name: multistreams-worker

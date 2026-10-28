@@ -13,7 +13,8 @@ type Sound = keyof typeof SOURCES;
 const VOLUME: Record<Sound, number> = { tap: 0.45, on: 0.35, off: 0.35, startup: 0.8 };
 
 const players: Partial<Record<Sound, AudioPlayer>> = {};
-let ready = false;
+/** modo de áudio aplicado (só no primeiro som, para não mexer no áudio de quem desligou os sons) */
+let modeReady: Promise<void> | undefined;
 
 /**
  * Toca um som do app. Os de interface (toque, liga/desliga) só tocam com "Sons dos botões"
@@ -21,17 +22,19 @@ let ready = false;
  */
 export function play(sound: Sound) {
   if (sound !== 'startup' && !useStore.getState().uiSounds) return;
-  try {
-    if (!ready) {
-      ready = true;
-      // respeita o modo silencioso e não interrompe música ou live tocando em outro app
-      void setAudioModeAsync({ playsInSilentMode: false, interruptionMode: 'mixWithOthers' }).catch(() => {});
+  // respeita o modo silencioso e não interrompe música ou live tocando em outro app; o som só sai
+  // depois de o modo valer (antes dele, o primeiro play podia pausar o áudio dos outros apps)
+  modeReady ??= Promise.resolve()
+    .then(() => setAudioModeAsync({ playsInSilentMode: false, interruptionMode: 'mixWithOthers' }))
+    .catch(() => {});
+  void modeReady.then(() => {
+    try {
+      const p = (players[sound] ??= createAudioPlayer(SOURCES[sound]));
+      p.volume = VOLUME[sound];
+      void p.seekTo(0);
+      p.play();
+    } catch {
+      // som é enfeite: se não tocar, segue a vida
     }
-    const p = (players[sound] ??= createAudioPlayer(SOURCES[sound]));
-    p.volume = VOLUME[sound];
-    void p.seekTo(0);
-    p.play();
-  } catch {
-    // som é enfeite: se não tocar, segue a vida
-  }
+  });
 }

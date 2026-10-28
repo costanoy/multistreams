@@ -22,17 +22,21 @@ const AndroidIcon = ({ size, color }: { size: number; color: string }) => (
   </Svg>
 );
 
+/** iPhone, iPad ou iPod (o iPad novo se apresenta como Mac, mas tem tela de toque): o APK não instala lá. */
+const apple = () =>
+  typeof navigator !== 'undefined' && (/iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1));
+
 /**
- * Botão "Baixar para Android" — só aparece no site (no app instalado não faz sentido).
+ * Botão "Baixar para Android": só aparece no site (no app instalado não faz sentido), e não no iPhone nem no iPad.
  * `variant`: "sidebar" (menu da web larga), "card" (Ajustes) ou "onboarding".
  */
 export function DownloadApk({ variant }: { variant: 'sidebar' | 'card' | 'onboarding' }) {
   const s = useSkin();
-  if (Platform.OS !== 'web') return null;
+  if (Platform.OS !== 'web' || apple()) return null;
 
   if (variant === 'card') {
     return (
-      <Pressable onPress={download} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
+      <Pressable role="button" aria-label="Baixar o app para Android (APK)" onPress={download} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, backgroundColor: s.card, boxShadow: SH.ring(s.line) }}>
           <View style={[grad(s.lcdBg, s.lcdFlat), { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', boxShadow: SH.lcd }]}>
             <AndroidIcon size={26} color={s.lcdFg} />
@@ -52,6 +56,8 @@ export function DownloadApk({ variant }: { variant: 'sidebar' | 'card' | 'onboar
   const big = variant === 'onboarding';
   return (
     <Pressable
+      role="button"
+      aria-label="Baixar o app para Android (APK)"
       onPress={download}
       style={({ pressed }) => [
         grad(s.lcdBg, s.lcdFlat),

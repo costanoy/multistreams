@@ -9,7 +9,7 @@
     <meta name="description" content="Veja numa lista só quem está ao vivo agora na Twitch, no YouTube e na Kick, do mais assistido para o menos. Filtre por idioma e categoria e acompanhe seus streamers. Grátis, na web e no Android." />
     <link rel="canonical" href="https://multistreams.cyberhat.com.br/" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="theme-color" content="#0b1220" />
+    <meta name="theme-color" content="#f7f8f9" />
     <meta name="application-name" content="Multistreams" />
 
     <!-- prévia ao compartilhar o link (WhatsApp, Facebook, Discord, LinkedIn…) -->
@@ -55,7 +55,7 @@
       }
       body {
         overflow: hidden;
-        background: #eceef1;
+        background: var(--boot-bg, #eceef1);
       }
       #root {
         display: flex;
@@ -72,6 +72,18 @@
         line-height: 1.5;
       }
     </style>
+    <!-- a skin salva pinta o fundo e a barra do navegador antes de o app abrir (sem clarão no Preto fosco);
+         as cores são o panel e o frameTop de cada skin em src/theme.ts -->
+    <script>
+      try {
+        var cores = { prata: ['#eceef1', '#f7f8f9'], azul: ['#e3e9f4', '#e8f0ff'], preto: ['#131417', '#3a3c41'] };
+        var cor = cores[JSON.parse(localStorage.getItem('multistreams')).state.skin];
+        if (cor) {
+          document.documentElement.style.setProperty('--boot-bg', cor[0]);
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', cor[1]);
+        }
+      } catch (e) {}
+    </script>
   </head>
 
   <body>

@@ -1,4 +1,4 @@
-# Hostinger (Apache): o site é uma SPA — qualquer caminho que não seja arquivo abre o index.html
+# Hostinger (Apache): o site é uma SPA; caminho sem extensão que não seja arquivo abre o index.html
 RewriteEngine On
 RewriteBase /
 
@@ -8,8 +8,10 @@ RewriteCond %{HTTP_HOST} ^www\. [NC]
 RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
 RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
 
+# arquivo que falta (APK, robots.txt, bundle) dá 404 em vez de abrir o app: nenhuma rota do app tem ponto
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !\.[A-Za-z0-9]{1,12}$
 RewriteRule . /index.html [L]
 
 # tipos que o Apache nem sempre conhece
@@ -17,9 +19,10 @@ AddType application/vnd.android.package-archive .apk
 AddType application/manifest+json .webmanifest
 AddType font/ttf .ttf
 
-# o APK baixa como arquivo
+# o APK baixa como arquivo e não fica preso em cache (o nome é sempre o mesmo)
 <FilesMatch "\.apk$">
   Header set Content-Disposition "attachment; filename=multistreams.apk"
+  Header set Cache-Control "no-cache"
 </FilesMatch>
 
 # compacta texto (JS, HTML, CSS, JSON, SVG, fontes): carrega bem mais rápido
@@ -27,9 +30,15 @@ AddType font/ttf .ttf
   AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript application/json application/manifest+json application/xml image/svg+xml font/ttf
 </IfModule>
 
-# cache: o index.html sempre fresco; JS e assets têm um código no nome que muda a cada versão, então podem ficar um ano
 <IfModule mod_headers.c>
-  <FilesMatch "index\.html$">
+  # segurança: só HTTPS (1 dia por enquanto; com tudo conferido em https, suba para max-age=31536000),
+  # sem o navegador adivinhar o tipo dos arquivos e sem o site dentro de iframe de outro domínio
+  Header always set Strict-Transport-Security "max-age=86400; includeSubDomains"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # cache: index.html e version.json sempre frescos; JS e assets têm um código no nome que muda a cada versão, então podem ficar um ano
+  <FilesMatch "^(index\.html|version\.json)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
   <FilesMatch "\.(js|css|ttf|woff2?|png|jpg|jpeg|webp|svg|mp3|wav|ico)$">

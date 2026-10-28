@@ -16,9 +16,15 @@
       "versionCode": 5,
       "adaptiveIcon": {
         "backgroundColor": "#eceef1",
-        "foregroundImage": "./assets/images/logo-round.png",
-        "monochromeImage": "./assets/images/icon-mono-white.png"
+        "foregroundImage": "./assets/images/adaptive-foreground.png",
+        "monochromeImage": "./assets/images/adaptive-monochrome.png"
       },
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -26,7 +32,12 @@
       "favicon": "./assets/images/logo-round.png"
     },
     "plugins": [
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "sitemap": false
+        }
+      ],
       "expo-localization",
       "expo-web-browser",
       [
@@ -48,7 +59,14 @@
           ]
         }
       ],
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
       "expo-asset"
     ],
     "experiments": {
