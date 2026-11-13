@@ -1,6 +1,12 @@
+<p align="center">
+  <a href="https://multistreams.cyberhat.com.br"><b>multistreams.cyberhat.com.br</b></a>
+</p>
+
 # Multistreams
 
-Quem dos seus streamers da Twitch, do YouTube e da Kick está ao vivo agora, numa lista só.
+Quem dos seus streamers da Twitch, do YouTube e da Kick está ao vivo agora, numa lista só. Funciona na web e no Android, com filtros por idioma e categoria.
+
+**Tecnologias:** TypeScript, React Native (Expo), Node.js, Supabase (PostgreSQL).
 
 | Pasta | O que é |
 | --- | --- |
